@@ -24,3 +24,6 @@ Value
 
 - On Debug
 ![image](https://github.com/user-attachments/assets/072f7e9b-170f-4441-80ec-44d17d97be3b)
+
+- On SQL
+![image](https://github.com/user-attachments/assets/bd6bccc3-7caf-45f0-b475-ddb60ba0dd0f)
