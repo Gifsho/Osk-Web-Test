@@ -1,0 +1,19 @@
+{
+    "manifest_version": 3,
+    "name": "Virtual Keyboard",
+    "version": "1.0",
+    "description": "A virtual keyboard to type in active tab.",
+    "permissions": ["activeTab"],
+    "action": {
+        "default_popup": "index.html"
+    },
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["content.js"]
+        }
+    ],
+    "background": {
+        "service_worker": "background.js"
+    }
+}
