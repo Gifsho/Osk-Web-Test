@@ -8,11 +8,9 @@ Test on postman
 Key
 
     Content-Type
-> Content-Type
 
->
-    git add .
->
-    git commit -m "My Comment to Add File"
->
-    git push -u origin main
+Value
+
+     application/x-www-form-urlencoded
+
+
