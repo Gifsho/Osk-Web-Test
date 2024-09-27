@@ -1,4 +1,4 @@
-Open Xampp testing on chrome opera microsofteagd
+Open Xampp testing on chrome✔ opera✔ microsofteagd✔
 
 Install&Pull in folder xampp -> htdocs
 
