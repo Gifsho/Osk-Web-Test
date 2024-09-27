@@ -3,7 +3,10 @@ Install&Pull in folder xampp -> htdocs
 
 Test on postman
 >
-> H
+> Header
+> Key
+    Content-Type
+> Content-Type
 
 >
     git add .
