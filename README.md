@@ -24,9 +24,11 @@ On-Screen Keyboard
   ![image](https://github.com/user-attachments/assets/33a3bb7f-1557-41a1-abcc-97a2ab076b41)
 
 How To Install
--- Download 
+- Download 
 >
->lkds
+> https://github.com/Gifsho/Osk-Web-Test/edit/main/README.md
+
+Setting on Browser
 -- Open Browser -> Setting -> Extensions -> ON Developer mode -> Installed extensions (Load Unpacket) -> Select Folder OSK
   
 
