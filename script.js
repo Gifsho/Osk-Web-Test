@@ -21,22 +21,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const layout = {
     "english-keyboard": [
-      [
-        "%",
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "7",
-        "8",
-        "9",
-        "0",
-        "-",
-        "=",
-        "Backspace",
-      ],
+      ["`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "Backspace"],
       ["Tab", "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[", "]", "\\"],
       ["Caps", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'", "enter"],
       ["Shift", "z", "x", "c", "v", "b", "n", "m", ",", ".", "/", "Shift"],
@@ -63,10 +48,10 @@ document.addEventListener("DOMContentLoaded", function () {
       ["00", "0", "Backspace"],
     ],
     "Thai-keyboard": [
-      ["ก", "ข", "ฃ", "ค", "ฅ", "ฆ", "ง", "จ", "ฉ", "ช", "ซ", "ฌ", "Backspace"],
-      ["ญ", "ฎ", "ฏ", "ฐ", "ฑ", "ฒ", "ณ", "ด", "ต", "ถ", "ท", "ธ", "น"],
-      ["บ", "ป", "ผ", "ฝ", "พ", "ฟ", "ภ", "ม", "ย", "ร", "ฤ"], 
-      ["ล", "ฦ", "ว", "ศ", "ษ", "ส", "ห", "ฬ", "อ", "ฮ"],
+      ["_", "ๅ", "/", "-", "ภ", "ถ", "ุ", "ึ", "ค", "ต", "จ", "ข", "ช", "Backspace"],
+      ["Tab", "ๆ", "ไ", "ำ", "พ", "ะ", "ั", "ี", "ร", "น", "ย", "บ", "ล", "ฃ"],
+      ["Caps", "ฟ", "ห", "ก", "ด", "เ", "้", "่", "า", "ส", "ว", "ง", "enter"],
+      ["Shift", "ผ", "ป", "แ", "อ", "ิ", "ื", "ท", "ม", "ใ", "ฝ", "Shift"],
       [" "],
     ],
     "Thai-scrambled": [
@@ -144,7 +129,6 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   }
-  
 
   function handleKeyPress(keyButton) {
     const activeElement = document.activeElement;
@@ -201,7 +185,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 }
 
-
   function sendInputToServer(messageKey) {
     var encryptionKey = CryptoJS.enc.Utf8.parse("1234567890123456");
     var encryptedMessage = CryptoJS.AES.encrypt(messageKey, encryptionKey, {
@@ -216,7 +199,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const capsKey = document.querySelector('.key[data-key="Caps"]');
     capsKey.classList.toggle("active", capsLockActive);
     capsKey.classList.toggle("bg-gray-400", capsLockActive);
-
+  
     document.querySelectorAll(".key").forEach((key) => {
       if (key.dataset.key.length === 1 && /[a-zA-Zก-๙]/.test(key.dataset.key)) {
         key.textContent = capsLockActive
@@ -224,15 +207,30 @@ document.addEventListener("DOMContentLoaded", function () {
           : key.dataset.key.toLowerCase();
       }
     });
-  }
 
+    const keyboardKeys = document.querySelectorAll(".key:not([data-key='Shift'])");
+    keyboardKeys.forEach((key) => {
+      const currentChar = key.textContent.trim();
+      if (capsLockActive && currentLayout === "Thai-keyboard" && ThaiAlphabetShift[currentChar]) {
+        key.textContent = ThaiAlphabetShift[currentChar];
+        key.dataset.key = ThaiAlphabetShift[currentChar];
+      } else if (!capsLockActive && currentLayout === "Thai-keyboard" && Object.values(ThaiAlphabetShift).includes(currentChar)) {
+        const originalKey = Object.keys(ThaiAlphabetShift).find(key => ThaiAlphabetShift[key] === currentChar);
+        if (originalKey) {
+          key.textContent = originalKey;
+          key.dataset.key = originalKey;
+        }
+      }
+    });
+  }
+  
   function toggleShift() {
     shiftActive = !shiftActive;
     document.querySelectorAll('.key[data-key="Shift"]').forEach((key) => {
       key.classList.toggle("active", shiftActive);
       key.classList.toggle("bg-gray-400", shiftActive);
     });
-
+  
     document.querySelectorAll(".key").forEach((key) => {
       if (key.dataset.key.length === 1 && /[a-zA-Zก-๙]/.test(key.dataset.key)) {
         key.textContent = shiftActive
@@ -240,7 +238,31 @@ document.addEventListener("DOMContentLoaded", function () {
           : key.dataset.key.toLowerCase();
       }
     });
+
+    const keyboardKeys = document.querySelectorAll(".key:not([data-key='Shift'])");
+    keyboardKeys.forEach((key) => {
+      const currentChar = key.textContent.trim();
+      if (shiftActive && currentLayout === "Thai-keyboard" && ThaiAlphabetShift[currentChar]) {
+        key.textContent = ThaiAlphabetShift[currentChar];
+        key.dataset.key = ThaiAlphabetShift[currentChar];
+      } else if (!shiftActive && currentLayout === "Thai-keyboard" && Object.values(ThaiAlphabetShift).includes(currentChar)) {
+        // เปลี่ยนกลับเมื่อปิด Shift
+        const originalKey = Object.keys(ThaiAlphabetShift).find(key => ThaiAlphabetShift[key] === currentChar);
+        if (originalKey) {
+          key.textContent = originalKey;
+          key.dataset.key = originalKey;
+        }
+      }
+    });
   }
+  
+  const ThaiAlphabetShift = {
+    "_":"%", "ๅ":"+", "/":"๑", "-":"๒", "ภ":"๓", "ถ":"๔", "ุ":"ู", "ึ":"฿", "ค":"๕",    
+    "ต":"๖", "จ":"๗", "ข":"๘", "ช":"๙", "ๆ":"๐", "ไ":"\"", "ำ":"ฎ", "พ":"ฑ", "ะ":"ธ",    
+    "ั":"ํ",  "ี":"๋", "ร":"ณ", "น":"ฯ", "ย":"ญ", "บ":"ฐ", "ล":",", "ฃ":"ฅ", "ฟ":"ฤ", "ห":"ฆ",    
+    "ก":"ฏ", "ด":"โ", "เ":"ฌ", "้":"็", "่":"๋", "า":"ษ", "ส":"ศ", "ว":"ซ", "ง":".", "ผ":"(", "ป":")",    
+    "แ":"ฉ", "อ":"ฮ", "ิ":"ฺ", "ื":"์", "ท":"?", "ม":"ฒ", "ใ":"ฬ", "ฝ":"ฦ"
+  };
 
   function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
@@ -257,7 +279,7 @@ document.addEventListener("DOMContentLoaded", function () {
         key.textContent = numbers[index];
         key.dataset.key = numbers[index];
     });
-}
+  }
 
   function scrambleEnglishKeys() {
     const keys = document.querySelectorAll(
