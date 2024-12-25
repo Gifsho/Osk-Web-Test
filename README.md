@@ -26,10 +26,10 @@ On-Screen Keyboard
 How To Install
 - Download 
 >
-> https://github.com/Gifsho/Osk-Web-Test/edit/main/README.md
+> git clone "https://github.com/Gifsho/Osk-Web-Test"
 
 Setting on Browser
--- Open Browser -> Setting -> Extensions -> ON Developer mode -> Installed extensions (Load Unpacket) -> Select Folder OSK
+- Open Browser -> Setting -> Extensions -> ON Developer mode -> Installed extensions (Load Unpacket) -> Select Folder OSK
   
 
 
