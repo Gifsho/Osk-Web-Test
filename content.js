@@ -1,25 +1,14 @@
-console.log("Content script loaded and ready to receive messages");
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    console.log("Content script loaded and ready to receive messages");
-
-    console.log("Received message:", request);
-    
     const activeElement = document.activeElement;
 
     if (request.action === "typeKey") {
         insertText(activeElement, request.key);
-        sendResponse({status: "success"});
     } else if (request.action === "backspace") {
         deleteText(activeElement);
-        sendResponse({status: "success"});
     } else if (request.action === "enter") {
         insertNewLine(activeElement);
-        sendResponse({status: "success"});
-    } else {
-        sendResponse({status: "unknown action"});
     }
 });
-
 
 function insertText(element, key) {
     if (isTextInput(element)) {
@@ -44,6 +33,9 @@ function deleteText(element) {
             element.setSelectionRange(start - 1, start - 1);
         }
         element.focus();
+    } else {
+        // ใช้ document.execCommand เพื่อรองรับการลบตัวอักษรในองค์ประกอบอื่นๆ
+        document.execCommand('delete');
     }
 }
 
@@ -61,7 +53,7 @@ function insertNewLine(element) {
 }
 
 function isTextInput(element) {
-    return element.tagName === 'TEXTAREA' || (element.tagName === 'INPUT' && element.type === 'text');
+    return element.tagName === 'TEXTAREA' || (element.tagName === 'INPUT' && element.type === 'text' && element.type === 'password') || element.tagName === 'FORM';
 }
 
 function triggerKeyEvent(element, key) {
@@ -75,3 +67,12 @@ function triggerKeyEvent(element, key) {
     });
     element.dispatchEvent(event);
 }
+
+document
+  .querySelectorAll("input, textarea, form, search, text")
+  .forEach((element) => {
+    element.addEventListener("focus", (event) => {
+      event.stopImmediatePropagation();
+      activeInput = element;
+    });
+  });

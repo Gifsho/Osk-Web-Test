@@ -4,10 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Virtual Keyboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
 </head>
-<body>
-    <div id="keyboard"></div>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen">
+    <select id="layout-select" class="mb-4 p-2 border border-gray-300 rounded">
+        <option value="english-keyboard" selected>English Keyboard</option>
+        <option value="english-scrambled">english scrambled</option>
+        <option value="Thai-keyboard">Thai keyboard</option>
+        <option value="Thai-scrambled">Thai scrambled</option>
+        <option value="numpad-keyboard">Numpad Keyboard</option>
+        <option value="scrambled-keyboard">Scrambled Keyboard</option>
+    </select>
+    <div id="keyboard" class="bg-white p-4 rounded shadow-lg"></div>
     <script src="script.js"></script>
 </body>
 </html>
