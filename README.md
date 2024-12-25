@@ -25,6 +25,8 @@ On-Screen Keyboard
 
 How To Install
 -- Download 
+>
+>lkds
 -- Open Browser -> Setting -> Extensions -> ON Developer mode -> Installed extensions (Load Unpacket) -> Select Folder OSK
   
 
