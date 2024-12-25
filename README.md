@@ -3,11 +3,27 @@ Open Browser testing on
 - opera ✔
 - microsoft eagd ✔
 
-- Testing On Web Browser
-![Screenshot 2024-09-28 004325](https://github.com/user-attachments/assets/efa86a7c-d974-4de9-90f5-e6fa92428699)
+On-Screen Keyboard
+- Open On-Screen Keyboard
+![image](https://github.com/user-attachments/assets/750a3522-5126-4156-b477-248592619798)
 
-- On Debug
-![image](https://github.com/user-attachments/assets/072f7e9b-170f-4441-80ec-44d17d97be3b)
+- Layout (Dropdowns) -> (1) English, (2) Thai, (3) Numpad, (4) English (Scramble) , (5) Thai (Scramble) , (6) Numpad (Scramble)
+  - 1
+  ![image](https://github.com/user-attachments/assets/750a3522-5126-4156-b477-248592619798)
+  - 2
+  ![image](https://github.com/user-attachments/assets/b5ac2b23-bfe4-46b6-a369-99fc60ab5ff2)
+  - 3
+  ![image](https://github.com/user-attachments/assets/086ce5ab-8aeb-401f-b900-435fcac8309e)
+  - 4
+  ![image](https://github.com/user-attachments/assets/898568c2-4b33-449b-81e0-a1643a888a96)
+  - 5
+  ![image](https://github.com/user-attachments/assets/91d7c0bc-dcda-4d49-b551-4ed0c69dfb3f)
+  - 6
+  ![image](https://github.com/user-attachments/assets/33a3bb7f-1557-41a1-abcc-97a2ab076b41)
 
-- On SQL
-![image](https://github.com/user-attachments/assets/bd6bccc3-7caf-45f0-b475-ddb60ba0dd0f)
+How To Install
+-- Download 
+-- Open Browser -> Setting -> Extensions -> ON Developer mode -> Installed extensions (Load Unpacket) -> Select Folder OSK
+  
+
+
