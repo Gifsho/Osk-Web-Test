@@ -4,7 +4,6 @@ Open Browser testing on
 - microsoft eagd ✔
 
 On-Screen Keyboard
-- Open On-Screen Keyboard
   ![image](https://github.com/user-attachments/assets/750a3522-5126-4156-b477-248592619798)
 
 - Layout (Dropdowns) -> (1) English, (2) Thai, (3) Numpad, (4) English (Scramble) , (5) Thai (Scramble) , (6) Numpad (Scramble)
