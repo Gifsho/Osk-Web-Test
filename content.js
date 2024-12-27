@@ -87,21 +87,29 @@ document
   let replacementImageUrl = 'https://png.pngtree.com/thumb_back/fh260/background/20220509/pngtree-burglar-wearing-a-mask-shows-fuck-gesture-aggression-fuck-middle-photo-image_2853469.jpg'; 
 
 function detectScreenCapture() {
-    let videoElement = document.createElement('video');
-    videoElement.autoplay = true;
-    videoElement.width = 0;
-    videoElement.height = 0;
-    document.body.appendChild(videoElement);
+    let isScreenCaptured = false;
 
-    navigator.mediaDevices.getDisplayMedia({ video: true }).then(stream => {
-        videoElement.srcObject = stream;
-        videoElement.onplay = () => {
-            alert('Screen capture detected. Displaying replacement image.');
-            document.body.style.backgroundImage = `url(${replacementImageUrl})`;
-        };
-    }).catch(error => {
-        console.error('Error: ', error);
-    });
+    function checkScreenCapture() {
+        try {
+            // ใช้ Canvas เพื่อตรวจจับการจับภาพหน้าจอ
+            let canvas = document.createElement('canvas');
+            let context = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            context.drawWindow(window, 0, 0, window.innerWidth, window.innerHeight, "white");
+
+            let data = context.getImageData(0, 0, 1, 1).data;
+            if (data[0] === 0 && data[1] === 0 && data[2] === 0) {
+                isScreenCaptured = true;
+                document.body.innerHTML = `<img src="${replacementImageUrl}" style="width: 100%; height: 100%;">`;
+                alert('Screen capture detected. Displaying replacement image.');
+            }
+        } catch (e) {
+            console.error('Error detecting screen capture: ', e);
+        }
+    }
+
+    setInterval(checkScreenCapture, 1000); // ตรวจจับทุกๆ 1 วินาที
 }
 
 detectScreenCapture();
