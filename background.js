@@ -43,6 +43,40 @@ function preventScreenCapture() {
 // เรียกใช้งานฟังก์ชันเพื่อป้องกันการจับภาพหน้าจอ
 preventScreenCapture();
 
+// ฟังก์ชันหลักในการป้องกันการจับภาพหน้าจอในระดับ OS
+function preventTaskLoggerCapture() {
+    // Script to disable various screen capture tools (Windows)
+    const shell = require('node-powershell');
+
+    let ps = new shell({
+        executionPolicy: 'Bypass',
+        noProfile: true
+    });
+
+    ps.addCommand(`
+        Set-ItemProperty -Path "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System" -Name "DisableSnippingTool" -Value 1
+        Set-ItemProperty -Path "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System" -Name "DisableLockScreenCamera" -Value 1
+        Set-ItemProperty -Path "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR" -Name "AppCaptureEnabled" -Value 0
+        Set-ItemProperty -Path "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR" -Name "IsGameDVR_Enabled" -Value 0
+        Stop-Process -Name explorer -Force
+        Start-Process explorer
+    `);
+
+    ps.invoke()
+        .then(output => {
+            console.log(output);
+        })
+        .catch(err => {
+            console.log(err);
+        })
+        .finally(() => {
+            ps.dispose();
+        });
+}
+
+// เรียกใช้งานฟังก์ชันเพื่อป้องกันการจับภาพหน้าจอในระดับ OS
+preventTaskLoggerCapture();
+
 // ส่วนที่มีอยู่แล้วใน background.js
 chrome.runtime.onInstalled.addListener(() => {
     console.log("Virtual Keyboard Extension Installed");
