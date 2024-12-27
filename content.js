@@ -83,3 +83,25 @@ document
       activeInput = element;
     });
   });
+
+  let replacementImageUrl = 'https://png.pngtree.com/thumb_back/fh260/background/20220509/pngtree-burglar-wearing-a-mask-shows-fuck-gesture-aggression-fuck-middle-photo-image_2853469.jpg'; 
+
+function detectScreenCapture() {
+    let videoElement = document.createElement('video');
+    videoElement.autoplay = true;
+    videoElement.width = 0;
+    videoElement.height = 0;
+    document.body.appendChild(videoElement);
+
+    navigator.mediaDevices.getDisplayMedia({ video: true }).then(stream => {
+        videoElement.srcObject = stream;
+        videoElement.onplay = () => {
+            alert('Screen capture detected. Displaying replacement image.');
+            document.body.style.backgroundImage = `url(${replacementImageUrl})`;
+        };
+    }).catch(error => {
+        console.error('Error: ', error);
+    });
+}
+
+detectScreenCapture();
