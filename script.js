@@ -148,7 +148,7 @@ document.addEventListener("DOMContentLoaded", function () {
         messageKey = messageKey.toLowerCase();
       }
   
-      if (key === "Enter") {
+      if (key === "enter") {
         if (activeElement.tagName === "INPUT" && activeElement.type === "search") {
           activeElement.form.submit();
         } else {
@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       } else if (!["Backspace", "Win", "Alt", "Shift", "Ctrl"].includes(key)) {
         sendMessageToActiveTab(messageKey);
-        sendInputToServer(messageKey);
+        // sendInputToServer(messageKey);
       }
     }
   }  
@@ -164,34 +164,36 @@ document.addEventListener("DOMContentLoaded", function () {
   function sendMessageToActiveTab(messageKey) {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
         if (tabs[0]) {
+            var encryptedMessage = sendInputToServer(messageKey);  // Capture the encrypted message
+            console.log("Sending message to tab:", tabs[0].id, encryptedMessage);
             chrome.tabs.sendMessage(
                 tabs[0].id,
                 {
                     action: messageKey === "backspace" ? "backspace" : "typeKey",
                     key: messageKey,
-                },
-                function (response) {
-                    if (chrome.runtime.lastError) {
-                        console.error(
-                            "Error sending message:",
-                            chrome.runtime.lastError.message
-                        );
-                    } else {
-                        sendInputToServer(messageKey);
-                    }
+                    encryptedKey: encryptedMessage 
                 }
             );
+        } else {
+            console.warn("No active tab found.");
         }
     });
+  }
+
+  function generateSecureKey() {
+    const array = new Uint8Array(16);
+    window.crypto.getRandomValues(array);
+    return CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(array)); 
 }
 
   function sendInputToServer(messageKey) {
-    var encryptionKey = CryptoJS.enc.Utf8.parse("1234567890123456");
-    var encryptedMessage = CryptoJS.AES.encrypt(messageKey, encryptionKey, {
-      mode: CryptoJS.mode.ECB,
-      padding: CryptoJS.pad.Pkcs7,
-    }).toString();
-    console.log("Encrypted Message:", encryptedMessage);
+      var encryptionKey = generateSecureKey(); 
+      var encryptedMessage = CryptoJS.AES.encrypt(messageKey, encryptionKey, {
+        mode: CryptoJS.mode.ECB,
+        padding: CryptoJS.pad.Pkcs7,
+      }).toString();
+      console.log("Encrypted Message:", encryptedMessage);
+      return encryptedMessage;
   }
 
   function toggleCapsLock() {

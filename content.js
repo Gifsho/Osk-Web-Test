@@ -1,27 +1,34 @@
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    console.log("Message received:", request);
+
     const activeElement = document.activeElement;
 
     if (request.action === "typeKey") {
         insertText(activeElement, request.key);
+        sendResponse({ status: "success", action: "typeKey" });
     } else if (request.action === "backspace") {
         deleteText(activeElement);
+        sendResponse({ status: "success", action: "backspace" });
     } else if (request.action === "enter") {
         insertNewLine(activeElement);
+        sendResponse({ status: "success", action: "enter" });
+    } else {
+        sendResponse({ status: "error", message: "Unknown action" });
     }
+
+    return true; 
 });
 
-function insertText(element, key) {
-    if (isTextInput(element)) {
-        const start = element.selectionStart;
-        const value = element.value;
 
-        element.value = value.slice(0, start) + key + value.slice(start);
-        element.setSelectionRange(start + key.length, start + key.length);
-        element.focus();
-    } else {
-        document.execCommand('insertText', false, key);
-    }
+
+function insertText(element, key) {
+    const selection = window.getSelection();
+    const range = selection.getRangeAt(0);
+    range.deleteContents();
+    range.insertNode(document.createTextNode(key));
+    range.collapse(false);
 }
+
 
 function deleteText(element) {
     if (isTextInput(element)) {
