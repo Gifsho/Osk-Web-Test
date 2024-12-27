@@ -1,42 +1,58 @@
-// ฟังก์ชันหลักในการป้องกันการจับภาพหน้าจอ
+// ฟังก์ชันหลักในการป้องกันการจับภาพหน้าจอและแจ้งเตือน
 function preventScreenCapture() {
     // ป้องกันการใช้งาน getDisplayMedia
     navigator.mediaDevices.getDisplayMedia = function() {
-        alert("ไม่สามารถจับภาพหน้าจอได้!");
+        showNotification("ไม่สามารถจับภาพหน้าจอได้!", "การจับภาพหน้าจอถูกป้องกัน");
         return Promise.reject("การจับภาพหน้าจอถูกป้องกัน");
     };
 
     // ป้องกันการใช้งาน getUserMedia
     if (navigator.getUserMedia) {
         navigator.getUserMedia = function() {
-            alert("การจับภาพหน้าจอไม่สามารถใช้งานได้!");
-            return Promise.reject("ถูกป้องกัน");
+            showNotification("การจับภาพหน้าจอไม่สามารถใช้งานได้!", "การจับภาพหน้าจอถูกป้องกัน");
+            return Promise.reject("การจับภาพหน้าจอถูกป้องกัน");
         };
     }
 
-    // ป้องกันการใช้งาน PrintScreen และ F12
+    // ป้องกันการใช้งาน PrintScreen และ F12 พร้อมแจ้งเตือน
     document.addEventListener('keydown', function(event) {
         if (event.key === "PrintScreen" || event.key === "F12") {
-            alert('การจับภาพหน้าจอถูกจำกัด!');
+            showNotification('การจับภาพหน้าจอถูกจำกัด!', 'การจับภาพหน้าจอถูกตรวจพบ!');
+            console.log('Screen capture attempt detected!');
             event.preventDefault();
         }
     });
 
-    // ตรวจจับการใช้งาน screen capture ของ third-party logger
+    // ตรวจจับการใช้งาน screen capture ของ third-party logger พร้อมแจ้งเตือน
     window.addEventListener('beforeprint', function(event) {
-        alert('การพิมพ์หรือจับภาพหน้าจอไม่สามารถใช้งานได้!');
+        showNotification('การพิมพ์หรือจับภาพหน้าจอไม่สามารถใช้งานได้!', 'การจับภาพหน้าจอถูกตรวจพบ!');
+        console.log('Screen capture attempt detected!');
         event.preventDefault();
     });
 
-    // ตรวจจับการใช้ screen.capture ของ third-party logger
+    // ตรวจจับการใช้ screen.capture ของ third-party logger พร้อมแจ้งเตือน
     if (navigator.mediaDevices) {
         navigator.mediaDevices.getUserMedia = function(constraints) {
             if (constraints && constraints.video && constraints.video.mediaSource === 'screen') {
-                alert("ไม่สามารถจับภาพหน้าจอได้!");
+                showNotification("ไม่สามารถจับภาพหน้าจอได้!", "การจับภาพหน้าจอถูกตรวจพบ!");
+                console.log('Screen capture attempt detected!');
                 return Promise.reject("การจับภาพหน้าจอถูกป้องกัน");
             }
             return navigator.mediaDevices.getUserMedia(constraints);
         };
+    }
+}
+
+// ฟังก์ชันแสดงการแจ้งเตือน
+function showNotification(title, message) {
+    if (Notification.permission === "granted") {
+        new Notification(title, { body: message });
+    } else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+                new Notification(title, { body: message });
+            }
+        });
     }
 }
 
