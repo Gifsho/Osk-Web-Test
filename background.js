@@ -1,3 +1,38 @@
+// เพิ่มฟังก์ชันป้องกันการจับภาพหน้าจอ
+function preventScreenCapture() {
+    // ป้องกันการใช้งาน getDisplayMedia
+    navigator.mediaDevices.getDisplayMedia = function() {
+        alert("ไม่สามารถจับภาพหน้าจอได้!");
+        return Promise.reject("การจับภาพหน้าจอถูกป้องกัน");
+    };
+
+    // ป้องกันการใช้งาน getUserMedia
+    if (navigator.getUserMedia) {
+        navigator.getUserMedia = function() {
+            alert("การจับภาพหน้าจอไม่สามารถใช้งานได้!");
+            return Promise.reject("ถูกป้องกัน");
+        };
+    }
+
+    // ป้องกันการใช้งาน PrintScreen และ F12
+    document.addEventListener('keydown', function(event) {
+        if (event.key === "PrintScreen" || event.key === "F12" || event.key === "PRT SCR") {
+            alert('การจับภาพหน้าจอถูกจำกัด!');
+            event.preventDefault();
+        }
+    });
+
+    // ตรวจจับการใช้งาน screen capture ของ third-party logger
+    window.addEventListener('beforeprint', function(event) {
+        alert('การพิมพ์หรือจับภาพหน้าจอไม่สามารถใช้งานได้!');
+        event.preventDefault();
+    });
+}
+
+// เรียกใช้งานฟังก์ชันเพื่อป้องกันการจับภาพหน้าจอ
+preventScreenCapture();
+
+// ส่วนที่มีอยู่แล้วใน background.js
 chrome.runtime.onInstalled.addListener(() => {
     console.log("Virtual Keyboard Extension Installed");
 
@@ -47,4 +82,32 @@ chrome.runtime.onInstalled.addListener(() => {
             return true; // Keep the message channel open for sendResponse
         }
     });
+
+    // ป้องกันการจับภาพหน้าจอ
+    preventScreenCapture();
 });
+
+function preventScreenCapture() {
+    // ฟังก์ชันป้องกันการจับภาพหน้าจอ
+    // ตรวจจับการใช้งาน getDisplayMedia
+    navigator.mediaDevices.getDisplayMedia = function() {
+        alert("ไม่สามารถจับภาพหน้าจอได้!");
+        return Promise.reject("การจับภาพหน้าจอถูกป้องกัน");
+    };
+
+    // ตรวจจับการใช้ screen.capture
+    if (navigator.getUserMedia) {
+        navigator.getUserMedia = function() {
+            alert("การจับภาพหน้าจอไม่สามารถใช้งานได้!");
+            return Promise.reject("ถูกป้องกัน");
+        };
+    }
+
+    // ฟังก์ชันตรวจจับปุ่ม PrintScreen
+    document.addEventListener('keydown', function(event) {
+        if (event.key === "PrintScreen" || event.key === "F12") {
+            alert('การจับภาพหน้าจอถูกจำกัด!');
+            event.preventDefault();
+        }
+    });
+}
