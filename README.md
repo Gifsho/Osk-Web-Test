@@ -29,7 +29,15 @@ How To Install
 > git clone "https://github.com/Gifsho/Osk-Web-Test"
 
 Setting on Browser
-- Open Browser -> Setting -> Extensions -> ON Developer mode -> Installed extensions (Load Unpacket) -> Select Folder OSK
-  
+- Open Browser -> Setting -> Extensions
+![image](https://github.com/user-attachments/assets/02874d03-3e9c-4b3d-b4a7-369581560dd9)
+
+- ON Developer mode
+![image](https://github.com/user-attachments/assets/5dd5b102-7d33-4f40-b39f-be15f6ebd624)
+
+- Installed extensions (Load Unpacket) -> Select Folder OSK
+![image](https://github.com/user-attachments/assets/a91f41e8-c3d6-4f96-a840-072d2798e56c)
+
+
 
 
