@@ -39,5 +39,13 @@ Setting on Browser
 ![image](https://github.com/user-attachments/assets/a91f41e8-c3d6-4f96-a840-072d2798e56c)
 
 
+Test Secure Keylogger
+- keylogger.js-Bettercap
+![Screenshot 2025-01-07 190741](https://github.com/user-attachments/assets/293c2fe2-ff8e-4e34-9d20-61a9fd7e0af0)
+
+![Screenshot 2025-01-07 190815](https://github.com/user-attachments/assets/368f6ea0-ba2d-4724-8dee-76613f11be1b)
+
+![Screenshot 2025-01-07 190828](https://github.com/user-attachments/assets/cfce5927-8b3d-4813-bac0-fa15fded8020)
+
 
 
