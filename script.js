@@ -307,3 +307,104 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 });
+// ฟังก์ชันหลักในการป้องกันการจับภาพหน้าจอ
+function preventScreenCapture() {
+    // ป้องกันการใช้งาน getDisplayMedia
+    navigator.mediaDevices.getDisplayMedia = function () {
+        showBlackScreen(true);
+        return Promise.reject("การจับภาพหน้าจอถูกป้องกัน");
+    };
+
+    // ป้องกันการใช้งาน getUserMedia
+    if (navigator.getUserMedia) {
+        navigator.getUserMedia = function () {
+            showBlackScreen(true);
+            return Promise.reject("การจับภาพหน้าจอถูกป้องกัน");
+        };
+    }
+
+    // ป้องกันการใช้งาน PrintScreen และ F12 พร้อมแจ้งเตือน
+    document.addEventListener('keyup', function (event) {
+        console.log('Key pressed:', event.key); // บันทึกการกดปุ่มลงใน Console
+        if (event.key === "PrintScreen" || event.key === "F12") {
+            showBlackScreen(true);
+            console.log('Screen capture attempt detected!');
+            event.preventDefault();
+        }
+    });
+
+    // ตรวจจับการใช้งาน screen capture ของ third-party logger พร้อมแจ้งเตือน
+    window.addEventListener('beforeprint', function (event) {
+        showBlackScreen(true);
+        console.log('Screen capture attempt detected!');
+        event.preventDefault();
+    });
+
+    // ตรวจจับการใช้ screen.capture ของ third-party logger พร้อมแจ้งเตือน
+    if (navigator.mediaDevices) {
+        navigator.mediaDevices.getUserMedia = function (constraints) {
+            if (constraints && constraints.video && constraints.video.mediaSource === 'screen') {
+                showBlackScreen(true);
+                console.log('Screen capture attempt detected!');
+                return Promise.reject("การจับภาพหน้าจอถูกป้องกัน");
+            }
+            return navigator.mediaDevices.getUserMedia(constraints);
+        };
+    }
+}
+
+// ฟังก์ชันเพื่อแสดงหน้าจอสีดำ
+function showBlackScreen(autoClose = false) {
+    const blackScreen = document.createElement('div');
+    blackScreen.style.position = 'fixed';
+    blackScreen.style.zIndex = '10000';
+    blackScreen.style.left = '0';
+    blackScreen.style.top = '0';
+    blackScreen.style.width = '100%';
+    blackScreen.style.height = '100%';
+    blackScreen.style.backgroundColor = 'black';
+
+    const button = document.createElement('button');
+    button.textContent = 'Close';
+    button.style.position = 'absolute';
+    button.style.top = '10px';
+    button.style.right = '10px';
+    button.style.padding = '10px';
+    button.style.backgroundColor = 'red';
+    button.style.color = 'white';
+    button.style.border = 'none';
+    button.style.cursor = 'pointer';
+    button.addEventListener('click', () => {
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        }
+        blackScreen.remove();
+    });
+    blackScreen.appendChild(button);
+
+    document.body.appendChild(blackScreen);
+
+    // เรียก Fullscreen API เพื่อทำให้ blackScreen เต็มหน้าจอ
+    if (blackScreen.requestFullscreen) {
+        blackScreen.requestFullscreen();
+    } else if (blackScreen.mozRequestFullScreen) { // Firefox
+        blackScreen.mozRequestFullScreen();
+    } else if (blackScreen.webkitRequestFullscreen) { // Chrome, Safari and Opera
+        blackScreen.webkitRequestFullscreen();
+    } else if (blackScreen.msRequestFullscreen) { // IE/Edge
+        blackScreen.msRequestFullscreen();
+    }
+
+    // ปิด blackScreen อัตโนมัติหลังจาก 3 วินาที (3000 มิลลิวินาที) ถ้า autoClose เป็น true
+    if (autoClose) {
+        setTimeout(() => {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            }
+            blackScreen.remove();
+        }, 3000); // สามารถปรับเวลาได้ตามที่ต้องการ
+    }
+}
+
+// เรียกใช้งานฟังก์ชันเพื่อป้องกันการจับภาพหน้าจอ
+preventScreenCapture();

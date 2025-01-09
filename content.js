@@ -76,3 +76,26 @@ document
       activeInput = element;
     });
   });
+
+  let keyboardFrame = null;
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+      if (request.action === "openKeyboard") {
+          if (!keyboardFrame) {
+              keyboardFrame = document.createElement('iframe');
+              keyboardFrame.src = chrome.runtime.getURL('index.html');
+              keyboardFrame.style.position = 'fixed';
+              keyboardFrame.style.bottom = '0';
+              keyboardFrame.style.right = '0';
+              keyboardFrame.style.left = 'auto';
+              keyboardFrame.style.width = '660px';
+              keyboardFrame.style.height = '360px';
+              keyboardFrame.style.border = 'none';
+              keyboardFrame.style.zIndex = '999999999';
+              document.body.appendChild(keyboardFrame);
+          } else {
+              keyboardFrame.style.display = keyboardFrame.style.display === 'none' ? 'block' : 'none';
+          }
+      } 
+  });
+  
+  

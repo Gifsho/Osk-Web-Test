@@ -10,18 +10,27 @@
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script> -->
 </head>
 
-<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen">
-    <select id="layout-select" class="mb-4 p-2 border border-gray-300 rounded">
-        <option value="english-keyboard" selected>English Keyboard</option>
-        <option value="english-scrambled">english scrambled</option>
-        <option value="Thai-keyboard">Thai keyboard</option>
-        <option value="Thai-scrambled">Thai scrambled</option>
-        <option value="numpad-keyboard">Numpad Keyboard</option>
-        <option value="scrambled-keyboard">Scrambled Keyboard</option>
-    </select>
-    <div id="keyboard" class="bg-white p-4 rounded shadow-lg"></div>
+<body>
+    <div class="flex flex-col items-center justify-center min-h-screen">
+        <div class="flex justify-end w-full px-4">
+            <div class="close-button ml-auto" style="height: 23px">
+                <div id="openKeyboard">&times;</div>
+            </div>
+        </div>
+        <select id="layout-select" class="mb-4 p-2 border border-gray-300 rounded">
+            <option value="english-keyboard" selected>English Keyboard</option>
+            <option value="english-scrambled">english scrambled</option>
+            <option value="Thai-keyboard">Thai keyboard</option>
+            <option value="Thai-scrambled">Thai scrambled</option>
+            <option value="numpad-keyboard">Numpad Keyboard</option>
+            <option value="scrambled-keyboard">Scrambled Keyboard</option>
+        </select>
+        <div id="keyboard" class="bg-white p-4 rounded shadow-lg"></div>
+    </div>
+      
     <script src="script.js"></script>
     <script src="crypto-js.min.js"></script>
+    <script src="/set/popup.js"></script>
 </body>
 
 </html>
