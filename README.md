@@ -29,7 +29,26 @@ How To Install
 > git clone "https://github.com/Gifsho/Osk-Web-Test"
 
 Setting on Browser
-- Open Browser -> Setting -> Extensions -> ON Developer mode -> Installed extensions (Load Unpacket) -> Select Folder OSK
+- Open Browser -> Setting -> Extensions <h2>
+![image](https://github.com/user-attachments/assets/02874d03-3e9c-4b3d-b4a7-369581560dd9)
+
+- ON Developer mode <h2>
+![image](https://github.com/user-attachments/assets/5dd5b102-7d33-4f40-b39f-be15f6ebd624)
+
+- Installed extensions (Load Unpacket) -> Select Folder OSK <h2>
+![image](https://github.com/user-attachments/assets/a91f41e8-c3d6-4f96-a840-072d2798e56c)
+
+
+Test Secure Keylogger
+- keylogger.js-Bettercap <h2>
+
+![Screenshot 2025-01-07 190741](https://github.com/user-attachments/assets/293c2fe2-ff8e-4e34-9d20-61a9fd7e0af0)
+<h2>
   
+![Screenshot 2025-01-07 190815](https://github.com/user-attachments/assets/368f6ea0-ba2d-4724-8dee-76613f11be1b)
+<h2>
+  
+![Screenshot 2025-01-07 190828](https://github.com/user-attachments/assets/cfce5927-8b3d-4813-bac0-fa15fded8020)
+
 
 
