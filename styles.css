@@ -1,5 +1,5 @@
 body {
-  height: 360px;
+  height: 300px;
   margin: 0;
   padding: 0;
   display: flex;
@@ -52,4 +52,31 @@ body {
 .close-button div {
   cursor: pointer;
   font-size: 35px;
+}
+
+
+#keyboard-container {
+  position: fixed; /* To take up full screen */
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: 0; /* Full height for keyboard */
+  background: white;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center; /* Centering keys */
+  justify-content: center; /* Centering keys */
+  flex-wrap: wrap; /* To make keys fill the container */
+}
+
+.key {
+  min-height: 30px; /* Adjust if needed */
+  max-height: calc(33.33% - 20px); /* Ensuring keys fit nicely in rows */
+}
+
+select {
+  text-align: center;
+  width: 100%;
+  font-size: 15px;
+  font-weight: bold;
 }

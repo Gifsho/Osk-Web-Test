@@ -17,10 +17,15 @@
       "128": "/icons/icon.png"
     }
   },
+  "options_page": "/set/setting.html",
   "web_accessible_resources": [
     {
       "resources": [
-        "index.html"
+        "/set/setting.html",
+        "index.html",
+        "/set/*",
+        "FullScreen/*",
+        "FullScreen/index.html"
       ],
       "matches": [
         "<all_urls>"
