@@ -120,12 +120,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   } else if (request.action === "positionkey") {
     handleSettingsFrame();
   } else if (request.action === "CLOSE_SOSK") {
-    if (keyboardFrameMini && keyboardFrameMini.style.display !== "none") {
-      keyboardFrameMini.style.display = "none";
-    }
-    if (keyboardFrameFull && keyboardFrameFull.style.display !== "none") {
-      keyboardFrameFull.style.display = "none";
-    }
+    hideAllFrames();
   }
 });
 
@@ -229,15 +224,7 @@ window.addEventListener("DOMContentLoaded", () => {
       }
     });
   });
-});
 
-function toggleFrameDisplay(frame) {
-  const isHidden = frame.style.display === "none";
-  frame.style.display = isHidden ? "block" : "none";
-  frame.setAttribute("aria-hidden", isHidden ? "false" : "true");
-}
-
-document.addEventListener("DOMContentLoaded", function() {
   if (chrome.tabs.onActivated) {
     chrome.tabs.onActivated.addListener(() => {
       hideAllFrames();
@@ -253,8 +240,14 @@ document.addEventListener("DOMContentLoaded", function() {
   window.addEventListener("beforeunload", () => {
     hideAllFrames();
   });
+
 });
 
+function toggleFrameDisplay(frame) {
+  const isHidden = frame.style.display === "none";
+  frame.style.display = isHidden ? "block" : "none";
+  frame.setAttribute("aria-hidden", isHidden ? "false" : "true");
+}
 
 function hideAllFrames() {
   if (keyboardFrameMini && keyboardFrameMini.style.display !== "none") {

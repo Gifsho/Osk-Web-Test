@@ -3,8 +3,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const layoutSelect = document.getElementById("layout-select");
   let shiftActive = false;
   let capsLockActive = false;
-  let isDragging = false;
-  let offsetX, offsetY;
   let currentLayout = "english-keyboard";
 
   const specialKeys = {
@@ -21,22 +19,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const layout = {
     "english-keyboard": [
-      [
-        "`",
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "7",
-        "8",
-        "9",
-        "0",
-        "-",
-        "=",
-        "Backspace",
-      ],
+      ["`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "Backspace"],
       ["Tab", "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[", "]", "\\"],
       ["Caps", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'", "Enter"],
       ["Shift", "z", "x", "c", "v", "b", "n", "m", ",", ".", "/", "Shift"],
@@ -64,22 +47,7 @@ document.addEventListener("DOMContentLoaded", function () {
       ["00", "0", "Backspace"],
     ],
     "Thai-keyboard": [
-      [
-        "_",
-        "ๅ",
-        "/",
-        "-",
-        "ภ",
-        "ถ",
-        "ุ",
-        "ึ",
-        "ค",
-        "ต",
-        "จ",
-        "ข",
-        "ช",
-        "Backspace",
-      ],
+      ["_", "ๅ", "/", "-", "ภ", "ถ", "ุ", "ึ", "ค", "ต", "จ", "ข", "ช", "Backspace"],
       ["Tab", "ๆ", "ไ", "ำ", "พ", "ะ", "ั", "ี", "ร", "น", "ย", "บ", "ล", "ฃ"],
       ["Caps", "ฟ", "ห", "ก", "ด", "เ", "้", "่", "า", "ส", "ว", "ง", "Enter"],
       ["Shift", "ผ", "ป", "แ", "อ", "ิ", "ื", "ท", "ม", "ใ", "ฝ", "Shift"],
@@ -117,15 +85,7 @@ document.addEventListener("DOMContentLoaded", function () {
           keyButton.style.height = "30px";
         }
         if (
-          [
-            "Backspace",
-            "Tab",
-            "Enter",
-            "Shift",
-            "Ctrl",
-            "Alt",
-            "Caps",
-          ].includes(key)
+          ["Backspace", "Tab", "Enter", "Shift", "Ctrl", "Alt", "Caps"].includes(key)
         ) {
           keyButton.classList.add("w-28");
         }

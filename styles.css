@@ -56,22 +56,22 @@ body {
 
 
 #keyboard-container {
-  position: fixed; /* To take up full screen */
+  position: fixed; 
   bottom: 0;
   left: 0;
   right: 0;
-  top: 0; /* Full height for keyboard */
+  top: 0; 
   background: white;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
   display: flex;
-  align-items: center; /* Centering keys */
-  justify-content: center; /* Centering keys */
-  flex-wrap: wrap; /* To make keys fill the container */
+  align-items: center; 
+  justify-content: center; 
+  flex-wrap: wrap; 
 }
 
 .key {
-  min-height: 30px; /* Adjust if needed */
-  max-height: calc(33.33% - 20px); /* Ensuring keys fit nicely in rows */
+  min-height: 30px; 
+  max-height: calc(33.33% - 20px);
 }
 
 select {
