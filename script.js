@@ -19,7 +19,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const layout = {
     "english-keyboard": [
-      ["`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "Backspace"],
+      [
+        "`",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "0",
+        "-",
+        "=",
+        "Backspace",
+      ],
       ["Tab", "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[", "]", "\\"],
       ["Caps", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'", "Enter"],
       ["Shift", "z", "x", "c", "v", "b", "n", "m", ",", ".", "/", "Shift"],
@@ -47,7 +62,22 @@ document.addEventListener("DOMContentLoaded", function () {
       ["00", "0", "Backspace"],
     ],
     "Thai-keyboard": [
-      ["_", "ๅ", "/", "-", "ภ", "ถ", "ุ", "ึ", "ค", "ต", "จ", "ข", "ช", "Backspace"],
+      [
+        "_",
+        "ๅ",
+        "/",
+        "-",
+        "ภ",
+        "ถ",
+        "ุ",
+        "ึ",
+        "ค",
+        "ต",
+        "จ",
+        "ข",
+        "ช",
+        "Backspace",
+      ],
       ["Tab", "ๆ", "ไ", "ำ", "พ", "ะ", "ั", "ี", "ร", "น", "ย", "บ", "ล", "ฃ"],
       ["Caps", "ฟ", "ห", "ก", "ด", "เ", "้", "่", "า", "ส", "ว", "ง", "Enter"],
       ["Shift", "ผ", "ป", "แ", "อ", "ิ", "ื", "ท", "ม", "ใ", "ฝ", "Shift"],
@@ -85,7 +115,15 @@ document.addEventListener("DOMContentLoaded", function () {
           keyButton.style.height = "30px";
         }
         if (
-          ["Backspace", "Tab", "Enter", "Shift", "Ctrl", "Alt", "Caps"].includes(key)
+          [
+            "Backspace",
+            "Tab",
+            "Enter",
+            "Shift",
+            "Ctrl",
+            "Alt",
+            "Caps",
+          ].includes(key)
         ) {
           keyButton.classList.add("w-28");
         }
@@ -108,7 +146,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (layoutName === "Thai-scrambled") {
       scrambleThaiKeys();
     }
-
   }
 
   function handleKeyPress(keyButton) {
@@ -129,23 +166,23 @@ document.addEventListener("DOMContentLoaded", function () {
         messageKey = messageKey.toLowerCase();
       }
 
-       if (key === "Enter") {
-      // ถ้า activeElement เป็น input หรือ textarea
-      if (
-        activeElement.tagName === "INPUT" ||
-        activeElement.type === "text"
-      ) {
-        // ถ้าเป็นฟอร์มค้นหา (YouTube หรือฟอร์มทั่วไป)
-        if (activeElement.form) {
-          activeElement.form.submit(); // ส่งฟอร์ม
+      if (key === "Enter") {
+        // ถ้า activeElement เป็น input หรือ textarea
+        if (
+          activeElement.tagName === "INPUT" ||
+          activeElement.type === "text"
+        ) {
+          // ถ้าเป็นฟอร์มค้นหา (YouTube หรือฟอร์มทั่วไป)
+          if (activeElement.form) {
+            activeElement.form.submit(); // ส่งฟอร์ม
+          }
+        } else {
+          // หากไม่ใช่ input หรือ textarea
+          sendMessageToActiveTab("\n");
         }
-      } else {
-        // หากไม่ใช่ input หรือ textarea
-        sendMessageToActiveTab("\n");
+      } else if (!["Backspace", "Win", "Alt", "Shift", "Ctrl"].includes(key)) {
+        sendMessageToActiveTab(messageKey);
       }
-    } else if (!["Backspace", "Win", "Alt", "Shift", "Ctrl"].includes(key)) {
-      sendMessageToActiveTab(messageKey);
-    }
     }
   }
 
@@ -183,9 +220,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function toggleCapsLock() {
     capsLockActive = !capsLockActive;
-    const capsKey = document.querySelector('.key[data-key="Caps"]');
-    capsKey.classList.toggle("active", capsLockActive);
-    capsKey.classList.toggle("bg-gray-400", capsLockActive);
+    document.querySelectorAll('.key[data-key="Caps"]').forEach((key) => {
+      key.classList.toggle("active", capsLockActive);
+      key.classList.toggle("bg-gray-400", capsLockActive);
+    });
 
     document.querySelectorAll(".key").forEach((key) => {
       if (key.dataset.key.length === 1 && /[a-zA-Zก-๙]/.test(key.dataset.key)) {
@@ -212,12 +250,32 @@ document.addEventListener("DOMContentLoaded", function () {
         currentLayout === "Thai-keyboard" &&
         Object.values(ThaiAlphabetShift).includes(currentChar)
       ) {
+        // เปลี่ยนกลับเมื่อปิด Shift
         const originalKey = Object.keys(ThaiAlphabetShift).find(
           (key) => ThaiAlphabetShift[key] === currentChar
         );
         if (originalKey) {
           key.textContent = originalKey;
           key.dataset.key = originalKey;
+        }
+      }
+
+      // Shift state for English layout
+      if (capsLockActive && currentLayout === "english-keyboard") {
+        if (EngAlphabetShift[key.dataset.key]) {
+          key.textContent = EngAlphabetShift[key.dataset.key];
+          key.dataset.key = EngAlphabetShift[key.dataset.key];
+        }
+      } else if (!capsLockActive && currentLayout === "english-keyboard") {
+        // Revert when shift is off
+        if (Object.values(EngAlphabetShift).includes(currentChar)) {
+          const originalKey = Object.keys(EngAlphabetShift).find(
+            (key) => EngAlphabetShift[key] === currentChar
+          );
+          if (originalKey) {
+            key.textContent = originalKey;
+            key.dataset.key = originalKey;
+          }
         }
       }
     });
@@ -264,8 +322,51 @@ document.addEventListener("DOMContentLoaded", function () {
           key.dataset.key = originalKey;
         }
       }
+
+      // Shift state for English layout
+      if (shiftActive && currentLayout === "english-keyboard") {
+        if (EngAlphabetShift[key.dataset.key]) {
+          key.textContent = EngAlphabetShift[key.dataset.key];
+          key.dataset.key = EngAlphabetShift[key.dataset.key];
+        }
+      } else if (!shiftActive && currentLayout === "english-keyboard") {
+        // Revert when shift is off
+        if (Object.values(EngAlphabetShift).includes(currentChar)) {
+          const originalKey = Object.keys(EngAlphabetShift).find(
+            (key) => EngAlphabetShift[key] === currentChar
+          );
+          if (originalKey) {
+            key.textContent = originalKey;
+            key.dataset.key = originalKey;
+          }
+        }
+      }
     });
   }
+
+  const EngAlphabetShift = {
+    "`": "~",
+    1: "!",
+    2: "@",
+    3: "#",
+    4: "$",
+    5: "%",
+    6: "^",
+    7: "&",
+    8: "*",
+    9: "(",
+    0: ")",
+    "-": "_",
+    "=": "+",
+    "[": "{",
+    "]": "}",
+    "\\": "|",
+    ";": ":",
+    "'": '"',
+    ",": "<",
+    ".": ">",
+    "/": "?",
+  };
 
   const ThaiAlphabetShift = {
     _: "%",
