@@ -1,3 +1,46 @@
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "SOSK-MINI") {
+      handleKeyboardMini();
+    } else if (request.action === "SOSK-FULLSCREEN") {
+      handleKeyboardFullscreen();
+    } else if (request.action === "positionkey") {
+      handleSettingsFrame();
+    } else if (request.action === "CLOSE_SOSK") {
+      hideAllFrames();
+    }
+  });
+  
+  function handleKeyboardMini() {
+    chrome.storage.sync.get(["keyboardPosition"], (result) => {
+      let position = result.keyboardPosition || "bottom-right";
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.tabs.sendMessage(tabs[0].id, { action: "SHOW_MINI_KEYBOARD", position: position });
+      });
+    });
+  }
+  
+  function handleKeyboardFullscreen() {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      chrome.tabs.sendMessage(tabs[0].id, { action: "SHOW_FULLSCREEN_KEYBOARD" });
+    });
+  }
+  
+  function handleSettingsFrame() {
+    chrome.storage.sync.get(["keyboardPosition"], (result) => {
+      let position = result.keyboardPosition || "bottom-right";
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.tabs.sendMessage(tabs[0].id, { action: "SHOW_SETTINGS_FRAME", position: position });
+      });
+    });
+  }
+  
+  function hideAllFrames() {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      chrome.tabs.sendMessage(tabs[0].id, { action: "HIDE_ALL_FRAMES" });
+    });
+  }
+  
+
 // // ฟังก์ชันหลักในการป้องกันการจับภาพหน้าจอ
 // function preventScreenCapture() {
 //     // ป้องกันการใช้งาน getDisplayMedia

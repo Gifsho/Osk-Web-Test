@@ -52,14 +52,14 @@ document.addEventListener("DOMContentLoaded", function () {
       ["1", "2", "3", "%"],
       ["4", "5", "6", "."],
       ["7", "8", "9", "="],
-      ["00", "0", "Backspace"],
+      ["(", "0", ")", "Backspace"],
     ],
     "scrambled-keyboard": [
       ["+", "-", "*", "/"],
       ["1", "2", "3", "%"],
       ["4", "5", "6", "."],
       ["7", "8", "9", "="],
-      ["00", "0", "Backspace"],
+      ["(", "0", ")", "Backspace"],
     ],
     "Thai-keyboard": [
       [
@@ -108,12 +108,8 @@ document.addEventListener("DOMContentLoaded", function () {
       row.forEach((key) => {
         const keyButton = document.createElement("button");
         keyButton.className =
-          "key bg-gray-200 p-2 m-1 rounded border border-gray-300 w-9";
+          "key p-2 m-1 rounded border border-gray-300";
         keyButton.textContent = key;
-        if (key === " ") {
-          keyButton.classList.add("w-80");
-          keyButton.style.height = "30px";
-        }
 
         if (key === 'backspace' || key === 'Backspace') {
           keyButton.innerHTML = '<i class="fa fa-backspace"></i>'; 
@@ -128,6 +124,7 @@ document.addEventListener("DOMContentLoaded", function () {
             "Ctrl",
             "Alt",
             "Caps",
+            " "
           ].includes(key)
         ) {
           keyButton.classList.add("w-28");
@@ -172,29 +169,26 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       if (key === "Enter") {
-        // ถ้า activeElement เป็น input หรือ textarea
         if (
           activeElement.tagName === "INPUT" ||
           activeElement.type === "text"
         ) {
-          // ถ้าเป็นฟอร์มค้นหา (YouTube หรือฟอร์มทั่วไป)
           if (activeElement.form) {
             activeElement.form.submit(); // ส่งฟอร์ม
           }
         } else {
-          // หากไม่ใช่ input หรือ textarea
           sendMessageToActiveTab("\n");
         }
       } else if (!["Backspace", "Win", "Alt", "Shift", "Ctrl"].includes(key)) {
         sendMessageToActiveTab(messageKey);
       }
-    }
+    } 
   }
 
   function sendMessageToActiveTab(messageKey) {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       if (tabs[0]) {
-        var encryptedMessage = sendInputToServer(messageKey); // Capture the encrypted message
+        var encryptedMessage = sendInputToServer(messageKey);
         console.log("Sending message to tab:", tabs[0].id, encryptedMessage);
         chrome.tabs.sendMessage(tabs[0].id, {
           action: messageKey === "backspace" ? "backspace" : "typeKey",
@@ -432,7 +426,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function scrambleKeyboard() {
     const keys = document.querySelectorAll(
-      ".key:not([data-key=Backspace]):not([data-key='+']):not([data-key='-']):not([data-key='*']):not([data-key='/']):not([data-key='%']):not([data-key='=']):not([data-key='.']):not([data-key='00'])"
+      ".key:not([data-key=Backspace]):not([data-key='+']):not([data-key='-']):not([data-key='*']):not([data-key='/']):not([data-key='%']):not([data-key='=']):not([data-key='.']):not([data-key='(']):not([data-key=')'])"
     );
     const numbers = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
     shuffleArray(numbers);

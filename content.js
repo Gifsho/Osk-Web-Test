@@ -1,3 +1,7 @@
+let keyboardFrameMini = null;
+let keyboardFrameFull = null;
+let settingdFrame = null;
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   const activeElement = document.activeElement;
 
@@ -7,6 +11,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     deleteText(activeElement);
   } else if (request.action === "Enter") {
     insertNewLine(activeElement);
+  } else if (request.action === "SOSK-MINI") {
+    handleKeyboardMini();
+  } else if (request.action === "SOSK-FULLSCREEN") {
+    handleKeyboardFullscreen();
+  } else if (request.action === "positionkey") {
+    handleSettingsFrame();
+  } else if (request.action === "CLOSE_SOSK") {
+    hideAllFrames();
   }
 });
 
@@ -108,28 +120,12 @@ function triggerKeyEvent(element, key) {
     element.dispatchEvent(event);
   });
 }
-let keyboardFrameMini = null;
-let keyboardFrameFull = null;
-let settingdFrame = null;
-
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "SOSK-MINI") {
-    handleKeyboardMini();
-  } else if (request.action === "SOSK-FULLSCREEN") {
-    handleKeyboardFullscreen();
-  } else if (request.action === "positionkey") {
-    handleSettingsFrame();
-  } else if (request.action === "CLOSE_SOSK") {
-    hideAllFrames();
-  }
-});
-
 
 function handleKeyboardMini() {
   chrome.storage.sync.get(["keyboardPosition"], (result) => {
     let position = result.keyboardPosition || "bottom-right";
     if (!keyboardFrameMini) {
-      keyboardFrameMini = createIframe("index.html", "800px", "305px");
+      keyboardFrameMini = createIframe("MiniScreen/index.html", "800px", "305px");
       setPosition(position, keyboardFrameMini);
       document.body.appendChild(keyboardFrameMini);
     } else {
@@ -169,7 +165,6 @@ function createIframe(src, width, height) {
   frame.style.height = height;
   frame.style.border = "none";
   frame.style.borderRadius = "10px";
-  frame.style.backgroundColor = "transparent";
   frame.style.zIndex = "999999999";
   frame.setAttribute("aria-hidden", "false");
   return frame;
