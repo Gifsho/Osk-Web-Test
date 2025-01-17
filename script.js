@@ -281,6 +281,10 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function toggleShift() {
+    if (capsLockActive) { 
+      return toggleCapsLock(); 
+    }
+
     shiftActive = !shiftActive;
     document.querySelectorAll('.key[data-key="Shift"]').forEach((key) => {
       key.classList.toggle("active", shiftActive);
