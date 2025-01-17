@@ -234,7 +234,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     const keyboardKeys = document.querySelectorAll(
-      ".key:not([data-key='Shift'])"
+      ".key:not([data-key='Caps'])"
     );
     keyboardKeys.forEach((key) => {
       const currentChar = key.textContent.trim();
