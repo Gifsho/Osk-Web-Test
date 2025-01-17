@@ -129,7 +129,7 @@ function handleKeyboardMini() {
   chrome.storage.sync.get(["keyboardPosition"], (result) => {
     let position = result.keyboardPosition || "bottom-right";
     if (!keyboardFrameMini) {
-      keyboardFrameMini = createIframe("index.html", "660px", "300px");
+      keyboardFrameMini = createIframe("index.html", "800px", "305px");
       setPosition(position, keyboardFrameMini);
       document.body.appendChild(keyboardFrameMini);
     } else {
@@ -140,7 +140,7 @@ function handleKeyboardMini() {
 
 function handleKeyboardFullscreen() {
   if (!keyboardFrameFull) {
-    keyboardFrameFull = createIframe("FullScreen/index.html", "100%", "437px");
+    keyboardFrameFull = createIframe("FullScreen/index.html", "100%", "440px");
     keyboardFrameFull.style.bottom = "0";
     document.body.appendChild(keyboardFrameFull);
   } else {
@@ -168,6 +168,8 @@ function createIframe(src, width, height) {
   frame.style.width = width;
   frame.style.height = height;
   frame.style.border = "none";
+  frame.style.borderRadius = "10px";
+  frame.style.backgroundColor = "transparent";
   frame.style.zIndex = "999999999";
   frame.setAttribute("aria-hidden", "false");
   return frame;

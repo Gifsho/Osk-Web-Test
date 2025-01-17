@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", function () {
     "Thai-scrambled": [
       ["ก", "ข", "ฃ", "ค", "ฅ", "ฆ", "ง", "จ", "ฉ", "ช", "ซ", "ฌ", "Backspace"],
       ["ญ", "ฎ", "ฏ", "ฐ", "ฑ", "ฒ", "ณ", "ด", "ต", "ถ", "ท", "ธ", "น"],
-      ["บ", "ป", "ผ", "ฝ", "พ", "ฟ", "ภ", "ม", "ย", "ร", "ฤ"],
+      ["บ", "ป", "ผ", "ฝ", "พ", "ฟ", "ภ", "ม", "ย", "ร", "ฤ", "Enter"],
       ["ล", "ฦ", "ว", "ศ", "ษ", "ส", "ห", "ฬ", "อ", "ฮ"],
       [" "],
     ],
@@ -114,6 +114,11 @@ document.addEventListener("DOMContentLoaded", function () {
           keyButton.classList.add("w-80");
           keyButton.style.height = "30px";
         }
+
+        if (key === 'backspace' || key === 'Backspace') {
+          keyButton.innerHTML = '<i class="fa fa-backspace"></i>'; 
+        }
+
         if (
           [
             "Backspace",

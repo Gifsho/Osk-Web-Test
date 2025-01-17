@@ -30,10 +30,6 @@ body {
   text-align: center;
 }
 
-.key.w-28 {
-  width: 80px;
-}
-
 .key.flex-1 {
   flex: 1;
 }
@@ -66,10 +62,13 @@ body {
   display: flex;
   align-items: center; 
   justify-content: center; 
-  flex-wrap: wrap; 
+  flex-wrap: wrap;
+  
 }
 
 .key {
+  width: 100%;
+  min-width: 50px;
   min-height: 30px; 
   max-height: calc(33.33% - 20px);
 }
