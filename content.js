@@ -157,24 +157,6 @@ function restoreFocus() {
   }
 }
 
-function handleKeyboardMini() {
-  chrome.storage.sync.get(["keyboardPosition"], (result) => {
-    let position = result.keyboardPosition || "bottom-right";
-    lastActiveElement = document.activeElement;
-    
-    if (!keyboardFrameMini) {
-      keyboardFrameMini = createIframe("MiniScreen/index.html", "800px", "270px");
-      setPosition(position, keyboardFrameMini);
-      document.body.appendChild(keyboardFrameMini);
-    } else {
-      toggleFrameDisplay(keyboardFrameMini);
-    }
-    
-    requestAnimationFrame(restoreFocus);
-  });
-}
-
-
 function handleKeyboardFullscreen() {
   if (!keyboardFrameFull) {
     keyboardFrameFull = createIframe("FullScreen/index.html", "99%", "410px");
@@ -197,56 +179,6 @@ function handleSettingsFrame() {
       toggleFrameDisplay(settingdFrame);
     }
   });
-}
-
-function createIframe(src, width, height) {
-  const frame = document.createElement("iframe");
-  frame.src = chrome.runtime.getURL(src);
-  frame.style.position = "fixed";
-  frame.style.width = width;
-  frame.style.height = height;
-  frame.style.border = "2px solid #222";
-  frame.style.borderRadius = "15px"; 
-  frame.style.zIndex = '9998';
-  frame.style.margin = "5px"
-  
-  frame.setAttribute("tabindex", "-1");
-  frame.setAttribute("aria-hidden", "true");
-
-  frame.addEventListener('mousedown', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    restoreFocus();
-  }, true);
-
-  frame.addEventListener('focus', (e) => {
-    e.preventDefault();
-    restoreFocus();
-  }, true);
-  
-  return frame;
-}
-
-
-function setPosition(position, frame) {
-  frame.style.top = "";
-  frame.style.bottom = "";
-  frame.style.left = "";
-  frame.style.right = "";
-
-  if (position === "bottom-left") {
-    frame.style.bottom = "0";
-    frame.style.left = "0";
-  } else if (position === "top-right") {
-    frame.style.top = "0";
-    frame.style.right = "0";
-  } else if (position === "top-left") {
-    frame.style.top = "0";
-    frame.style.left = "0";
-  } else {
-    frame.style.bottom = "0";
-    frame.style.right = "0";
-  }
 }
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -296,11 +228,95 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+function handleKeyboardMini() {
+  chrome.storage.sync.get(["keyboardPosition"], (result) => {
+    let position = result.keyboardPosition || "bottom-right";
+    lastActiveElement = document.activeElement;
+    
+    if (!keyboardFrameMini) {
+      keyboardFrameMini = createIframe("MiniScreen/index.html", "800px", "270px");
+      setPosition(position, keyboardFrameMini);
+      document.body.appendChild(keyboardFrameMini);
+    } else {
+      toggleFrameDisplay(keyboardFrameMini);
+    }
+    
+    requestAnimationFrame(restoreFocus);
+  });
+}
+
+function createIframe(src, width, height) {
+  const frame = document.createElement("iframe");
+  frame.src = chrome.runtime.getURL(src);
+  frame.style.position = "fixed";
+  frame.style.width = width;
+  frame.style.height = height;
+  frame.style.backgroundColor = "#f5f5f5";
+  frame.style.border = "2px solid #222";
+  frame.style.borderRadius = "15px"; 
+  frame.style.zIndex = '9998';
+  frame.style.margin = "5px";
+  frame.style.padding = "15px";
+  frame.style.cursor = "move";  // เพิ่ม cursor ที่เหมาะสมให้รู้ว่าเป็นการลาก
+
+  // เพิ่มการฟังเหตุการณ์การคลิกเพื่อเริ่มลาก
+  frame.addEventListener("mousedown", startDrag);
+
+  frame.setAttribute("tabindex", "-1");
+  frame.setAttribute("aria-hidden", "true");
+
+  return frame;
+}
+
+// ฟังก์ชันเริ่มต้นการลาก
+function startDrag(event) {
+  this.isDragging = true;  // ตั้งค่า flag ว่าเริ่มลากแล้ว
+  this.offsetX = event.clientX - this.offsetLeft;
+  this.offsetY = event.clientY - this.offsetTop;
+
+  // เพิ่มการฟังเหตุการณ์การเคลื่อนที่ของเมาส์ขณะลาก
+  document.addEventListener("mousemove", drag.bind(this));
+  document.addEventListener("mouseup", () => {
+    this.isDragging = false;  // เมื่อปล่อยเมาส์ให้หยุดลาก
+    document.removeEventListener("mousemove", drag.bind(this));
+  });
+}
+
+// ฟังก์ชันขณะลาก
+function drag(event) {
+  if (this.isDragging) {
+    this.style.left = `${event.clientX - this.offsetX}px`;
+    this.style.top = `${event.clientY - this.offsetY}px`;
+  }
+}
+
+function setPosition(position, frame) {
+  frame.style.top = "";
+  frame.style.bottom = "";
+  frame.style.left = "";
+  frame.style.right = "";
+
+  if (position === "bottom-left") {
+    frame.style.bottom = "0";
+    frame.style.left = "0";
+  } else if (position === "top-right") {
+    frame.style.top = "0";
+    frame.style.right = "0";
+  } else if (position === "top-left") {
+    frame.style.top = "0";
+    frame.style.left = "0";
+  } else {
+    frame.style.bottom = "0";
+    frame.style.right = "0";
+  }
+}
+
 function toggleFrameDisplay(frame) {
   const isHidden = frame.style.display === "none";
   frame.style.display = isHidden ? "block" : "none";
   frame.setAttribute("aria-hidden", isHidden ? "false" : "true");
 }
+
 
 function hideAllFrames() {
   if (keyboardFrameMini && keyboardFrameMini.style.display !== "none") {
