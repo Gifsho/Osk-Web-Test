@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <title>Settings</title>
     <style>
         body {
@@ -65,7 +67,7 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container shadow-2xl">
         <h1>Settings</h1>
         <div class="section">
             <label for="position">Select Keyboard Position:</label>
@@ -76,16 +78,8 @@
                 <option value="top-left">Top Left</option>
             </select>
         </div>
-
-        <div class="section">
-            <label for="full-sc">Select FullScreen Option:</label>
-            <select id="full-sc">
-                <option value="full">Full Screen</option>
-                <option value="mini-left">Mini</option>
-            </select>
-        </div>
-
-        <button id="save">Save</button>
+        <img src="https://github.com/Gifsho/pic/blob/main/Screenshot%202025-01-21%20232808.png?raw=true" width="400px" style="margin-top: -20px; margin-bottom: 20px; border-color: #000;" class="shadow-2xl">
+        <button id="save" class="shadow-2xl">Save</button>
     </div>
 
     <script src="../content.js"></script>

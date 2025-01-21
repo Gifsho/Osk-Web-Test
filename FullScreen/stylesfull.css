@@ -72,3 +72,10 @@ body {
     cursor: pointer;
     font-size: 35px;
   }
+
+  [data-key="Shift ⇧"].active{
+    background-color: #999;
+  }
+  [data-key="Caps 🄰"].active{
+    background-color: #999;
+  }

@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 
-<body>
+<body class="shadow-2xl">
     <div class="bgC rounded shadow-lg">
         <div class="bgC flex items-center justify-center p-1">
             <select id="layout-select" class="p-1 border border-gray-300 rounded">
@@ -25,9 +25,8 @@
                 <div id="CLOSE_SOSK">&times;</div>
             </div>
         </div>
-        <div id="keyboard" class="bgC p-1 rounded shadow-lg"></div>
+        <div id="keyboard" class="bgC p-1 rounded shadow-lg" tabindex="-1" aria-hidden="true"></div>
     </div>
-      
     <script src="../script.js"></script>
     <script src="../set/crypto/crypto-js.min.js"></script>
     <script src="../set/popup.js"></script>

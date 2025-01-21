@@ -1,16 +1,21 @@
 let keyboardFrameMini = null;
 let keyboardFrameFull = null;
 let settingdFrame = null;
+let lastActiveElement = null;
+let focusTimeout = null; 
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  const activeElement = document.activeElement;
-
+  lastActiveElement = document.activeElement;
+  
   if (request.action === "typeKey") {
-    insertText(activeElement, request.key);
+    insertText(lastActiveElement, request.key);
+    restoreFocus();
   } else if (request.action === "backspace") {
-    deleteText(activeElement);
+    deleteText(lastActiveElement);
+    restoreFocus();
   } else if (request.action === "Enter") {
-    insertNewLine(activeElement);
+    insertNewLine(lastActiveElement);
+    restoreFocus();
   } else if (request.action === "SOSK-MINI") {
     handleKeyboardMini();
   } else if (request.action === "SOSK-FULLSCREEN") {
@@ -22,22 +27,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-// ฟังก์ชันแทรกข้อความ
 function insertText(element, key) {
   if (isTextInput(element)) {
     const start = element.selectionStart;
     const end = element.selectionEnd;
-    const value = element.value;
-
+    const value = element.value || '';
+    
     element.value = value.slice(0, start) + key + value.slice(end);
-    element.setSelectionRange(start + key.length, start + key.length);
-    element.focus();
+    
+    requestAnimationFrame(() => {
+      element.setSelectionRange(start + key.length, start + key.length);
+      restoreFocus();
+    });
   } else {
     document.execCommand("insertText", false, key);
   }
 }
 
-// ฟังก์ชันลบข้อความ
 function deleteText(element) {
   if (isTextInput(element)) {
     const start = element.selectionStart;
@@ -51,46 +57,48 @@ function deleteText(element) {
       element.value = value.slice(0, start) + value.slice(end);
       element.setSelectionRange(start, start);
     }
-    element.focus();
   } else {
     document.execCommand("delete");
   }
 }
 
-// ฟังก์ชันแทรกบรรทัดใหม่
 function insertNewLine(element) {
-  if (isTextInput(element)) {
-    const start = element.selectionStart;
-    const end = element.selectionEnd;
-    const value = element.value;
+  console.log("Element tag:", element.tagName);
+  
+  document.addEventListener('focusin', (e) => {
+    if (isTextInput(e.target)) {
+      lastActiveElement = e.target;
+      requestAnimationFrame(restoreFocus);
+    }
+  }, true);
 
-    element.value = value.slice(0, start) + "\n" + value.slice(end);
-    element.setSelectionRange(start + 1, start + 1);
-    element.focus();
+  if (isTextInput(element)) {
+    if (element.tagName === "TEXTAREA") {
+      const start = element.selectionStart;
+      const end = element.selectionEnd;
+      const value = element.value;
+      element.value = value.slice(0, start) + "\n" + value.slice(end);
+      element.setSelectionRange(start + 1, start + 1);
+    } else if (element.tagName === "INPUT" || element.type === "password" || element.type === "text") {
+      if (element.form) {
+        const submitButton = element.form.querySelector('input[type="submit"], button[type="submit"], button[type="button"], button[onclick]');
+        if (submitButton) {
+          submitButton.setAttribute('autocomplete', 'off');
+          submitButton.click();
+        } else {
+          element.form.submit(); 
+        }
+      } else {
+        element.value += '\n'; 
+      }
+    }
   } else {
-    triggerKeyEvent(element, "Enter");
+    document.execCommand("insertText", false, "\n");
   }
 }
 
-// ฟังก์ชันตรวจสอบว่าเป็น input หรือ textarea
-function isTextInput(element) {
-  return (
-    element &&
-    (element.tagName === "TEXTAREA" ||
-      (element.tagName === "INPUT" &&
-        (element.type === "text" ||
-          element.type === "password" ||
-          element.type === "search" ||
-          element.type === "email" ||
-          element.type === "tel" ||
-          element.type === "number")))
-  );
-}
-
-// ฟังก์ชันจำลองเหตุการณ์กดปุ่ม
 function triggerKeyEvent(element, key) {
   const keyCode = key === "Enter" ? 13 : 0;
-
   const event = new KeyboardEvent("keydown", {
     key: key,
     code: key,
@@ -102,46 +110,80 @@ function triggerKeyEvent(element, key) {
   });
 
   if (key === "Enter" && element.form) {
-    event.preventDefault(); // ป้องกันการ submit ที่ไม่ต้องการ
+    element.form.submit();
   }
 
   element.dispatchEvent(event);
+}
 
-  ["keypress", "keyup"].forEach((eventType) => {
-    const event = new KeyboardEvent(eventType, {
-      key: key,
-      code: key,
-      keyCode: keyCode,
-      charCode: keyCode,
-      which: keyCode,
-      bubbles: true,
-      cancelable: true,
-    });
-    element.dispatchEvent(event);
-  });
+function isTextInput(element) {
+  return (
+    element &&
+    (element.tagName === "TEXTAREA" ||
+      (element.tagName === "INPUT" &&
+        (element.type === "text" ||
+          element.type === "password" ||
+          element.type === "search" ||
+          element.type === "email" ||
+          element.type === "tel" ||
+          element.type === "number"))))
+}
+
+document.querySelectorAll("input, textarea").forEach(input => {
+  input.setAttribute('autocomplete', 'off');  
+});
+
+function restoreFocus() {
+  if (lastActiveElement && isTextInput(lastActiveElement)) {
+    if (focusTimeout) {
+      clearTimeout(focusTimeout);  
+    }
+
+    focusTimeout = setTimeout(() => {
+      lastActiveElement.blur();
+      requestAnimationFrame(() => {
+        lastActiveElement.focus();
+        
+        if (typeof lastActiveElement.value === 'string') {
+          const length = lastActiveElement.value.length;
+          lastActiveElement.setSelectionRange(length, length);
+        }
+        
+        lastActiveElement.style.caretColor = 'auto';
+        lastActiveElement.style.webkitUserSelect = 'text';
+        lastActiveElement.style.userSelect = 'text';
+      });
+    }, 50); 
+  }
 }
 
 function handleKeyboardMini() {
   chrome.storage.sync.get(["keyboardPosition"], (result) => {
     let position = result.keyboardPosition || "bottom-right";
+    lastActiveElement = document.activeElement;
+    
     if (!keyboardFrameMini) {
-      keyboardFrameMini = createIframe("MiniScreen/index.html", "800px", "305px");
+      keyboardFrameMini = createIframe("MiniScreen/index.html", "800px", "270px");
       setPosition(position, keyboardFrameMini);
       document.body.appendChild(keyboardFrameMini);
     } else {
       toggleFrameDisplay(keyboardFrameMini);
     }
+    
+    requestAnimationFrame(restoreFocus);
   });
 }
 
+
 function handleKeyboardFullscreen() {
   if (!keyboardFrameFull) {
-    keyboardFrameFull = createIframe("FullScreen/index.html", "100%", "440px");
+    keyboardFrameFull = createIframe("FullScreen/index.html", "99%", "410px");
     keyboardFrameFull.style.bottom = "0";
     document.body.appendChild(keyboardFrameFull);
   } else {
     toggleFrameDisplay(keyboardFrameFull);
   }
+  requestAnimationFrame(restoreFocus);
 }
 
 function handleSettingsFrame() {
@@ -158,17 +200,33 @@ function handleSettingsFrame() {
 }
 
 function createIframe(src, width, height) {
-  let frame = document.createElement("iframe");
+  const frame = document.createElement("iframe");
   frame.src = chrome.runtime.getURL(src);
   frame.style.position = "fixed";
   frame.style.width = width;
   frame.style.height = height;
-  frame.style.border = "none";
-  frame.style.borderRadius = "10px";
-  frame.style.zIndex = "999999999";
-  frame.setAttribute("aria-hidden", "false");
+  frame.style.border = "2px solid #222";
+  frame.style.borderRadius = "15px"; 
+  frame.style.zIndex = '9998';
+  frame.style.margin = "5px"
+  
+  frame.setAttribute("tabindex", "-1");
+  frame.setAttribute("aria-hidden", "true");
+
+  frame.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    restoreFocus();
+  }, true);
+
+  frame.addEventListener('focus', (e) => {
+    e.preventDefault();
+    restoreFocus();
+  }, true);
+  
   return frame;
 }
+
 
 function setPosition(position, frame) {
   frame.style.top = "";
@@ -210,13 +268,12 @@ window.addEventListener("DOMContentLoaded", () => {
       if (chrome.runtime.lastError) {
         console.error("Error saving position:", chrome.runtime.lastError);
       } else {
-        alert("Setting saved!");
-        // ย้าย keyboard ทันทีหลังบันทึกตำแหน่ง
+        alert("บันทึกการแก้ไขเรียบร้อยครับ");
         if (keyboardFrameMini) {
           setPosition(selectedPosition, keyboardFrameMini);
         }
         if (settingdFrame) {
-          settingdFrame.style.display = "none"; // ปิดหน้า iframe การตั้งค่า
+          settingdFrame.style.display = "none";
         }
       }
     });
@@ -237,7 +294,6 @@ window.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("beforeunload", () => {
     hideAllFrames();
   });
-
 });
 
 function toggleFrameDisplay(frame) {
@@ -254,3 +310,13 @@ function hideAllFrames() {
     keyboardFrameFull.style.display = "none";
   }
 }
+
+const style = document.createElement('style');
+style.textContent = `
+  input, textarea {
+    caret-color: auto !important;
+    -webkit-user-select: text !important;
+    user-select: text !important;
+  }
+`;
+document.head.appendChild(style);

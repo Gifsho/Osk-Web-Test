@@ -6,46 +6,31 @@ document.addEventListener("DOMContentLoaded", function () {
   let currentLayout = "english-keyboard";
 
   const specialKeys = {
-    Backspace: () => sendMessageToActiveTab("backspace"),
-    Tab: () => sendMessageToActiveTab("\t"),
-    Caps: () => toggleCapsLock(),
-    Enter: () => sendMessageToActiveTab("\n"),
-    Shift: () => toggleShift(),
-    Space: () => sendMessageToActiveTab(" "),
-    Ctrl: () => {},
-    Win: () => {},
-    Alt: () => {},
+    "Backspace": () => sendMessageToActiveTab("backspace"),
+    "Tab ↹": () => sendMessageToActiveTab("\t"),
+    "Caps 🄰": () => toggleCapsLock(),
+    "Enter": () => sendMessageToActiveTab("Enter"),
+    "Shift ⇧": () => toggleShift(),
+    "Space": () => sendMessageToActiveTab(" "),
+    "Ctrl": () => {},
+    "Win": () => {},
+    "Alt": () => {},
   };
 
   const layout = {
     "english-keyboard": [
-      [
-        "`",
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "7",
-        "8",
-        "9",
-        "0",
-        "-",
-        "=",
-        "Backspace",
-      ],
-      ["Tab", "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[", "]", "\\"],
-      ["Caps", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'", "Enter"],
-      ["Shift", "z", "x", "c", "v", "b", "n", "m", ",", ".", "/", "Shift"],
-      [" "],
+      ["`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "Backspace"],
+      ["Tab ↹", "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[", "]", "\\"],
+      ["Caps 🄰", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'", "Enter"],
+      ["Shift ⇧", "z", "x", "c", "v", "b", "n", "m", ",", ".", "/", "Shift ⇧"],
+      ["Space"],
     ],
     "english-scrambled": [
       ["`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "="],
-      ["Tab", "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "Backspace"],
-      ["Caps", "a", "s", "d", "f", "g", "h", "j", "k", "l", "Enter"],
-      ["Shift", "z", "x", "c", "v", "b", "n", "m", "Shift"],
-      [" "],
+      ["Tab ↹", "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "Backspace"],
+      ["Caps 🄰", "a", "s", "d", "f", "g", "h", "j", "k", "l", "Enter"],
+      ["Shift ⇧", "z", "x", "c", "v", "b", "n", "m", "Shift ⇧"],
+      ["Space"],
     ],
     "numpad-keyboard": [
       ["+", "-", "*", "/"],
@@ -62,33 +47,18 @@ document.addEventListener("DOMContentLoaded", function () {
       ["(", "0", ")", "Backspace"],
     ],
     "Thai-keyboard": [
-      [
-        "_",
-        "ๅ",
-        "/",
-        "-",
-        "ภ",
-        "ถ",
-        "ุ",
-        "ึ",
-        "ค",
-        "ต",
-        "จ",
-        "ข",
-        "ช",
-        "Backspace",
-      ],
-      ["Tab", "ๆ", "ไ", "ำ", "พ", "ะ", "ั", "ี", "ร", "น", "ย", "บ", "ล", "ฃ"],
-      ["Caps", "ฟ", "ห", "ก", "ด", "เ", "้", "่", "า", "ส", "ว", "ง", "Enter"],
-      ["Shift", "ผ", "ป", "แ", "อ", "ิ", "ื", "ท", "ม", "ใ", "ฝ", "Shift"],
-      [" "],
+      ["_", "ๅ", "/", "-", "ภ", "ถ", "ุ", "ึ", "ค", "ต", "จ", "ข", "ช", "Backspace"],
+      ["Tab ↹", "ๆ", "ไ", "ำ", "พ", "ะ", "ั", "ี", "ร", "น", "ย", "บ", "ล", "ฃ"],
+      ["Caps 🄰", "ฟ", "ห", "ก", "ด", "เ", "้", "่", "า", "ส", "ว", "ง", "Enter"],
+      ["Shift ⇧", "ผ", "ป", "แ", "อ", "ิ", "ื", "ท", "ม", "ใ", "ฝ", "Shift ⇧"],
+      ["Space"],
     ],
     "Thai-scrambled": [
       ["ก", "ข", "ฃ", "ค", "ฅ", "ฆ", "ง", "จ", "ฉ", "ช", "ซ", "ฌ", "Backspace"],
       ["ญ", "ฎ", "ฏ", "ฐ", "ฑ", "ฒ", "ณ", "ด", "ต", "ถ", "ท", "ธ", "น"],
       ["บ", "ป", "ผ", "ฝ", "พ", "ฟ", "ภ", "ม", "ย", "ร", "ฤ", "Enter"],
       ["ล", "ฦ", "ว", "ศ", "ษ", "ส", "ห", "ฬ", "อ", "ฮ"],
-      [" "],
+      ["Space"],
     ],
   };
 
@@ -104,7 +74,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     layout[layoutName].forEach((row) => {
       const rowDiv = document.createElement("div");
-      rowDiv.className = "flex mb-2";
+      rowDiv.className = `flex`;
       row.forEach((key) => {
         const keyButton = document.createElement("button");
         keyButton.className =
@@ -118,13 +88,13 @@ document.addEventListener("DOMContentLoaded", function () {
         if (
           [
             "Backspace",
-            "Tab",
+            "Tab ↹",
             "Enter",
-            "Shift",
+            "Shift ⇧",
             "Ctrl",
             "Alt",
-            "Caps",
-            " "
+            "Caps 🄰",
+            "Space"
           ].includes(key)
         ) {
           keyButton.classList.add("w-28");
@@ -163,7 +133,7 @@ document.addEventListener("DOMContentLoaded", function () {
         messageKey = messageKey.toUpperCase();
         toggleShift();
       } else if (capsLockActive) {
-        messageKey = messageKey.toUpperCase();
+        messageKey = messageKey.toUpperCase() || toggleCapsLock();
       } else {
         messageKey = messageKey.toLowerCase();
       }
@@ -174,27 +144,27 @@ document.addEventListener("DOMContentLoaded", function () {
           activeElement.type === "text"
         ) {
           if (activeElement.form) {
-            activeElement.form.submit(); // ส่งฟอร์ม
+            activeElement.form.submit(); 
           }
         } else {
           sendMessageToActiveTab("\n");
         }
-      } else if (!["Backspace", "Win", "Alt", "Shift", "Ctrl"].includes(key)) {
+      } else if (!["Backspace", "Win", "Alt", "Shift ⇧", "Ctrl"].includes(key)) {
         sendMessageToActiveTab(messageKey);
       }
     } 
   }
-
+  
   function sendMessageToActiveTab(messageKey) {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       if (tabs[0]) {
         var encryptedMessage = sendInputToServer(messageKey);
         console.log("Sending message to tab:", tabs[0].id, encryptedMessage);
         chrome.tabs.sendMessage(tabs[0].id, {
-          action: messageKey === "backspace" ? "backspace" : "typeKey",
+          action: messageKey === "backspace" ? "backspace" : messageKey === "Enter" ? "Enter" : "typeKey",
           key: messageKey,
           encryptedKey: encryptedMessage,
-        });
+        });     
       } else {
         console.warn("No active tab found.");
       }
@@ -219,9 +189,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function toggleCapsLock() {
     capsLockActive = !capsLockActive;
-    document.querySelectorAll('.key[data-key="Caps"]').forEach((key) => {
+    document.querySelectorAll('.key[data-key="Caps 🄰"]').forEach((key) => {
       key.classList.toggle("active", capsLockActive);
-      key.classList.toggle("bg-gray-400", capsLockActive);
     });
 
     document.querySelectorAll(".key").forEach((key) => {
@@ -233,7 +202,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     const keyboardKeys = document.querySelectorAll(
-      ".key:not([data-key='Caps'])"
+      ".key:not([data-key='Caps 🄰'])"
     );
     keyboardKeys.forEach((key) => {
       const currentChar = key.textContent.trim();
@@ -249,7 +218,6 @@ document.addEventListener("DOMContentLoaded", function () {
         currentLayout === "Thai-keyboard" &&
         Object.values(ThaiAlphabetShift).includes(currentChar)
       ) {
-        // เปลี่ยนกลับเมื่อปิด Shift
         const originalKey = Object.keys(ThaiAlphabetShift).find(
           (key) => ThaiAlphabetShift[key] === currentChar
         );
@@ -259,14 +227,12 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
-      // Shift state for English layout
-      if (capsLockActive && currentLayout === "english-keyboard") {
+      if (capsLockActive && (currentLayout === "english-keyboard"||currentLayout === "english-scrambled")) {
         if (EngAlphabetShift[key.dataset.key]) {
           key.textContent = EngAlphabetShift[key.dataset.key];
           key.dataset.key = EngAlphabetShift[key.dataset.key];
         }
-      } else if (!capsLockActive && currentLayout === "english-keyboard") {
-        // Revert when shift is off
+      } else if (!capsLockActive && (currentLayout === "english-keyboard"||currentLayout === "english-scrambled")) {
         if (Object.values(EngAlphabetShift).includes(currentChar)) {
           const originalKey = Object.keys(EngAlphabetShift).find(
             (key) => EngAlphabetShift[key] === currentChar
@@ -286,9 +252,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     shiftActive = !shiftActive;
-    document.querySelectorAll('.key[data-key="Shift"]').forEach((key) => {
+    document.querySelectorAll('.key[data-key="Shift ⇧"]').forEach((key) => {
       key.classList.toggle("active", shiftActive);
-      key.classList.toggle("bg-gray-400", shiftActive);
     });
 
     document.querySelectorAll(".key").forEach((key) => {
@@ -300,7 +265,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     const keyboardKeys = document.querySelectorAll(
-      ".key:not([data-key='Shift'])"
+      ".key:not([data-key='Shift ⇧'])"
     );
     keyboardKeys.forEach((key) => {
       const currentChar = key.textContent.trim();
@@ -316,7 +281,6 @@ document.addEventListener("DOMContentLoaded", function () {
         currentLayout === "Thai-keyboard" &&
         Object.values(ThaiAlphabetShift).includes(currentChar)
       ) {
-        // เปลี่ยนกลับเมื่อปิด Shift
         const originalKey = Object.keys(ThaiAlphabetShift).find(
           (key) => ThaiAlphabetShift[key] === currentChar
         );
@@ -326,14 +290,12 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
-      // Shift state for English layout
-      if (shiftActive && currentLayout === "english-keyboard") {
+      if (shiftActive && (currentLayout === "english-keyboard"||currentLayout === "english-scrambled")) {
         if (EngAlphabetShift[key.dataset.key]) {
           key.textContent = EngAlphabetShift[key.dataset.key];
           key.dataset.key = EngAlphabetShift[key.dataset.key];
         }
-      } else if (!shiftActive && currentLayout === "english-keyboard") {
-        // Revert when shift is off
+      } else if (!shiftActive && (currentLayout === "english-keyboard"||currentLayout === "english-scrambled")) {
         if (Object.values(EngAlphabetShift).includes(currentChar)) {
           const originalKey = Object.keys(EngAlphabetShift).find(
             (key) => EngAlphabetShift[key] === currentChar
@@ -442,7 +404,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function scrambleEnglishKeys() {
     const keys = document.querySelectorAll(
-      ".key:not([data-key='Backspace']):not([data-key='Caps']):not([data-key='Shift']):not([data-key='Enter']):not([data-key='Tab']):not([data-key='`']):not([data-key='1']):not([data-key='2']):not([data-key='3']):not([data-key='4']):not([data-key='5']):not([data-key='6']):not([data-key='7']):not([data-key='8']):not([data-key='9']):not([data-key='0']):not([data-key='-']):not([data-key='+']):not([data-key='='])"
+      ".key:not([data-key='Backspace']):not([data-key='Caps 🄰']):not([data-key='Shift ⇧']):not([data-key='Enter']):not([data-key='Tab ↹']):not([data-key='`']):not([data-key='1']):not([data-key='2']):not([data-key='3']):not([data-key='4']):not([data-key='5']):not([data-key='6']):not([data-key='7']):not([data-key='8']):not([data-key='9']):not([data-key='0']):not([data-key='-']):not([data-key='+']):not([data-key='=']):not([data-key='-']):not([data-key='+']):not([data-key='=']):not([data-key='~']):not([data-key='!']):not([data-key='@']):not([data-key='#']):not([data-key='$']):not([data-key='%']):not([data-key='^']):not([data-key='&']):not([data-key='*']):not([data-key='(']):not([data-key=')']):not([data-key='_'])"
     );
     const englishAlphabet = "abcdefghijklmnopqrstuvwxyz".split("");
     shuffleArray(englishAlphabet);
@@ -454,7 +416,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function scrambleThaiKeys() {
     const keys = document.querySelectorAll(
-      ".key:not([data-key='Backspace']):not([data-key='Caps']):not([data-key='Shift']):not([data-key='Enter'])"
+      ".key:not([data-key='Backspace']):not([data-key='Caps 🄰']):not([data-key='Shift ⇧']):not([data-key='Enter'])"
     );
     const ThaiAlphabet = "กขฃคฅฆงจฉชซฌญฎฏฐฑฒณดตถทธนบปผฝพฟภมยรฤลฦวศษสหฬอฮ".split(
       ""
