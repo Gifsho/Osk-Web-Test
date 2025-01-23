@@ -1,27 +1,182 @@
 document.addEventListener("DOMContentLoaded", function () {
+  document.body.innerHTML = `
+    <div class="bgC rounded" id="content">
+      <div class="bgC flex items-center justify-center p-1">
+        <select id="layout-select" class="p-1 border border-gray-300 rounded">
+          <option value="full" selected>Full keyboard</option>
+          <option value="english-keyboard">English Keyboard</option>
+          <option value="english-scrambled">English Scrambled</option>
+          <option value="Thai-keyboard">Thai Keyboard</option>
+          <option value="Thai-scrambled">Thai Scrambled</option>
+          <option value="numpad-keyboard">Numpad Keyboard</option>
+          <option value="scrambled-keyboard">Scrambled Keyboard</option>
+        </select>
+        
+      </div>
+      <div id="keyboard" class="bgC p-1 rounded" tabindex="-1" aria-hidden="true"></div>
+    </div>
+  `;
   const keyboard = document.getElementById("keyboard");
   const layoutSelect = document.getElementById("layout-select");
   let shiftActive = false;
   let capsLockActive = false;
-  let currentLayout = "english-keyboard";
+  let currentLayout = "full";
 
   const specialKeys = {
-    "Backspace": () => sendMessageToActiveTab("backspace"),
+    Backspace: () => sendMessageToActiveTab("backspace"),
     "Tab ↹": () => sendMessageToActiveTab("\t"),
     "Caps 🄰": () => toggleCapsLock(),
-    "Enter": () => sendMessageToActiveTab("Enter"),
+    Enter: () => sendMessageToActiveTab("Enter"),
     "Shift ⇧": () => toggleShift(),
-    "Space": () => sendMessageToActiveTab(" "),
-    "Ctrl": () => {},
-    "Win": () => {},
-    "Alt": () => {},
+    Space: () => sendMessageToActiveTab(" "),
+    Ctrl: () => {},
+    Esc: () => {},
+    F1: () => {},
+    F2: () => {},
+    F3: () => {},
+    F4: () => {},
+    F5: () => {},
+    F6: () => {},
+    F7: () => {},
+    F8: () => {},
+    F9: () => {},
+    F10: () => {},
+    F11: () => {},
+    F12: () => {},
   };
 
   const layout = {
+    full: [
+      [
+        "Esc",
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5",
+        "F6",
+        "F7",
+        "F8",
+        "F9",
+        "F10",
+        "F11",
+        "F12",
+        "DEL⌦",
+        "HOME",
+        "END",
+      ],
+      [
+        "`",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "0",
+        "-",
+        "=",
+        "Backspace",
+      ].concat(["+", "-", "*", "/"]),
+      [
+        "Tab ↹",
+        "q",
+        "w",
+        "e",
+        "r",
+        "t",
+        "y",
+        "u",
+        "i",
+        "o",
+        "p",
+        "[",
+        "]",
+        "\\",
+      ].concat(["7", "8", "9", "%"]),
+      [
+        "Caps 🄰",
+        "a",
+        "s",
+        "d",
+        "f",
+        "g",
+        "h",
+        "j",
+        "k",
+        "l",
+        ";",
+        "'",
+        "Enter",
+      ].concat(["4", "5", "6", "_"]),
+      [
+        "Shift ⇧",
+        "z",
+        "x",
+        "c",
+        "v",
+        "b",
+        "n",
+        "m",
+        ",",
+        ".",
+        "/",
+        "Shift ⇧",
+        "↑",
+      ].concat(["1", "2", "3", "="]),
+      ["Space", "←", "↓", "→"].concat(["0", "."]),
+    ],
     "english-keyboard": [
-      ["`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "Backspace"],
-      ["Tab ↹", "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[", "]", "\\"],
-      ["Caps 🄰", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'", "Enter"],
+      [
+        "`",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "0",
+        "-",
+        "=",
+        "Backspace",
+      ],
+      [
+        "Tab ↹",
+        "q",
+        "w",
+        "e",
+        "r",
+        "t",
+        "y",
+        "u",
+        "i",
+        "o",
+        "p",
+        "[",
+        "]",
+        "\\",
+      ],
+      [
+        "Caps 🄰",
+        "a",
+        "s",
+        "d",
+        "f",
+        "g",
+        "h",
+        "j",
+        "k",
+        "l",
+        ";",
+        "'",
+        "Enter",
+      ],
       ["Shift ⇧", "z", "x", "c", "v", "b", "n", "m", ",", ".", "/", "Shift ⇧"],
       ["Space"],
     ],
@@ -35,9 +190,10 @@ document.addEventListener("DOMContentLoaded", function () {
     "numpad-keyboard": [
       ["+", "-", "*", "/"],
       ["1", "2", "3", "%"],
-      ["4", "5", "6", "."],
-      ["7", "8", "9", "="],
-      ["(", "0", ")", "Backspace"],
+      ["4", "5", "6", "_"],
+      ["7", "8", "9", "."],
+      ["(", "0", ")", "="],
+      ["Backspace"],
     ],
     "scrambled-keyboard": [
       ["+", "-", "*", "/"],
@@ -47,9 +203,53 @@ document.addEventListener("DOMContentLoaded", function () {
       ["(", "0", ")", "Backspace"],
     ],
     "Thai-keyboard": [
-      ["_", "ๅ", "/", "-", "ภ", "ถ", "ุ", "ึ", "ค", "ต", "จ", "ข", "ช", "Backspace"],
-      ["Tab ↹", "ๆ", "ไ", "ำ", "พ", "ะ", "ั", "ี", "ร", "น", "ย", "บ", "ล", "ฃ"],
-      ["Caps 🄰", "ฟ", "ห", "ก", "ด", "เ", "้", "่", "า", "ส", "ว", "ง", "Enter"],
+      [
+        "_",
+        "ๅ",
+        "/",
+        "-",
+        "ภ",
+        "ถ",
+        "ุ",
+        "ึ",
+        "ค",
+        "ต",
+        "จ",
+        "ข",
+        "ช",
+        "Backspace",
+      ],
+      [
+        "Tab ↹",
+        "ๆ",
+        "ไ",
+        "ำ",
+        "พ",
+        "ะ",
+        "ั",
+        "ี",
+        "ร",
+        "น",
+        "ย",
+        "บ",
+        "ล",
+        "ฃ",
+      ],
+      [
+        "Caps 🄰",
+        "ฟ",
+        "ห",
+        "ก",
+        "ด",
+        "เ",
+        "้",
+        "่",
+        "า",
+        "ส",
+        "ว",
+        "ง",
+        "Enter",
+      ],
       ["Shift ⇧", "ผ", "ป", "แ", "อ", "ิ", "ื", "ท", "ม", "ใ", "ฝ", "Shift ⇧"],
       ["Space"],
     ],
@@ -69,20 +269,39 @@ document.addEventListener("DOMContentLoaded", function () {
     createKeyboard(currentLayout);
   });
 
+  function updateKeyboard() {
+    var select = document.getElementById("layout-select");
+    var keyboardDiv = document.getElementById("keyboard");
+
+    // อัปเดต class ด้วยชื่อ layout ที่เลือก
+    var selectedLayout = select.value;
+    keyboardDiv.className = `p-1 rounded ${selectedLayout}`;
+    keyboardDiv.innerHTML = select.options[select.selectedIndex].text;
+  }
+
   function createKeyboard(layoutName) {
-    keyboard.innerHTML = "";
+    const keyboard = document.getElementById("keyboard");
+    const layoutSelect = document.getElementById("layout-select");
+
+    // อัปเดต class ด้วยชื่อ layout ที่เลือก
+    keyboard.className = `p-1 rounded ${layoutSelect.value}`;
+
+    keyboard.innerHTML = ""; // Clear existing keys
 
     layout[layoutName].forEach((row) => {
       const rowDiv = document.createElement("div");
       rowDiv.className = `flex`;
-      row.forEach((key) => {
+      row.forEach((key, index) => {
         const keyButton = document.createElement("button");
-        keyButton.className =
-          "key p-2 m-1 rounded border border-gray-300";
+        keyButton.className = "key p-2 m-1 rounded border border-gray-300";
         keyButton.textContent = key;
 
-        if (key === 'backspace' || key === 'Backspace') {
-          keyButton.innerHTML = '<i class="fa fa-backspace"></i>'; 
+        if (index >= row.length - 4) {
+          keyButton.classList = "key p-2 m-1 rounded border border-gray-300 concat-keys";
+        }
+
+        if (key === "backspace" || key === "Backspace") {
+          keyButton.innerHTML = '<i class="fa fa-backspace"></i>';
         }
 
         if (
@@ -94,7 +313,7 @@ document.addEventListener("DOMContentLoaded", function () {
             "Ctrl",
             "Alt",
             "Caps 🄰",
-            "Space"
+            "Space",
           ].includes(key)
         ) {
           keyButton.classList.add("w-28");
@@ -144,27 +363,42 @@ document.addEventListener("DOMContentLoaded", function () {
           activeElement.type === "text"
         ) {
           if (activeElement.form) {
-            activeElement.form.submit(); 
+            activeElement.form.submit();
           }
         } else {
           sendMessageToActiveTab("\n");
         }
-      } else if (!["Backspace", "Win", "Alt", "Shift ⇧", "Ctrl"].includes(key)) {
+      } else if (
+        !["Backspace", "Win", "Alt", "Shift ⇧", "Ctrl"].includes(key)
+      ) {
         sendMessageToActiveTab(messageKey);
       }
-    } 
+    }
   }
-  
+
   function sendMessageToActiveTab(messageKey) {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       if (tabs[0]) {
         var encryptedMessage = sendInputToServer(messageKey);
-        console.log("Sending message to tab:", tabs[0].id, encryptedMessage);
+        // console.log("Sending message to tab:", tabs[0].id, encryptedMessage);
         chrome.tabs.sendMessage(tabs[0].id, {
-          action: messageKey === "backspace" ? "backspace" : messageKey === "Enter" ? "Enter" : "typeKey",
+          action:
+            messageKey === "backspace"
+              ? "backspace"
+              : messageKey === "Enter"
+              ? "Enter"
+              : messageKey === "esc"
+              ? "esc"
+              : messageKey === "del⌦"
+              ? "del⌦"
+              : messageKey === "home"
+              ? "home"
+              : messageKey === "end"
+              ? "end"
+              : "typeKey",
           key: messageKey,
           encryptedKey: encryptedMessage,
-        });     
+        });
       } else {
         console.warn("No active tab found.");
       }
@@ -183,7 +417,7 @@ document.addEventListener("DOMContentLoaded", function () {
       mode: CryptoJS.mode.ECB,
       padding: CryptoJS.pad.Pkcs7,
     }).toString();
-    console.log("Encrypted Message:", encryptedMessage);
+    // console.log("Encrypted Message:", encryptedMessage);
     return encryptedMessage;
   }
 
@@ -227,12 +461,20 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
-      if (capsLockActive && (currentLayout === "english-keyboard"||currentLayout === "english-scrambled")) {
+      if (
+        capsLockActive &&
+        (currentLayout === "english-keyboard" ||
+          currentLayout === "english-scrambled")
+      ) {
         if (EngAlphabetShift[key.dataset.key]) {
           key.textContent = EngAlphabetShift[key.dataset.key];
           key.dataset.key = EngAlphabetShift[key.dataset.key];
         }
-      } else if (!capsLockActive && (currentLayout === "english-keyboard"||currentLayout === "english-scrambled")) {
+      } else if (
+        !capsLockActive &&
+        (currentLayout === "english-keyboard" ||
+          currentLayout === "english-scrambled")
+      ) {
         if (Object.values(EngAlphabetShift).includes(currentChar)) {
           const originalKey = Object.keys(EngAlphabetShift).find(
             (key) => EngAlphabetShift[key] === currentChar
@@ -247,8 +489,8 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function toggleShift() {
-    if (capsLockActive) { 
-      return toggleCapsLock(); 
+    if (capsLockActive) {
+      return toggleCapsLock();
     }
 
     shiftActive = !shiftActive;
@@ -290,12 +532,20 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
-      if (shiftActive && (currentLayout === "english-keyboard"||currentLayout === "english-scrambled")) {
+      if (
+        shiftActive &&
+        (currentLayout === "english-keyboard" ||
+          currentLayout === "english-scrambled")
+      ) {
         if (EngAlphabetShift[key.dataset.key]) {
           key.textContent = EngAlphabetShift[key.dataset.key];
           key.dataset.key = EngAlphabetShift[key.dataset.key];
         }
-      } else if (!shiftActive && (currentLayout === "english-keyboard"||currentLayout === "english-scrambled")) {
+      } else if (
+        !shiftActive &&
+        (currentLayout === "english-keyboard" ||
+          currentLayout === "english-scrambled")
+      ) {
         if (Object.values(EngAlphabetShift).includes(currentChar)) {
           const originalKey = Object.keys(EngAlphabetShift).find(
             (key) => EngAlphabetShift[key] === currentChar

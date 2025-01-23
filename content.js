@@ -1,18 +1,16 @@
 let keyboardFrameMini = null;
 let keyboardFrameFull = null;
 let settingdFrame = null;
-let lastActiveElement = null;
 let focusTimeout = null; 
+let lastActiveElement = null;
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   lastActiveElement = document.activeElement;
-  
+
   if (request.action === "typeKey") {
     insertText(lastActiveElement, request.key);
-    restoreFocus();
   } else if (request.action === "backspace") {
     deleteText(lastActiveElement);
-    restoreFocus();
   } else if (request.action === "Enter") {
     insertNewLine(lastActiveElement);
     restoreFocus();
@@ -24,8 +22,87 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     handleSettingsFrame();
   } else if (request.action === "CLOSE_SOSK") {
     hideAllFrames();
+  } else if (request.action === "esc") {
+    restoreFocus();
+    escapes();
+  } else if (request.action === "del⌦") {
+    deleteTextStart(lastActiveElement);
+    restoreFocus();
+  } else if (request.action === "home") {
+    lastActiveElement.setSelectionRange(0, 0);
+    restoreFocus();
+  } else if (request.action === "end" && lastActiveElement && isTextInput(lastActiveElement)) {
+    lastActiveElement.setSelectionRange(lastActiveElement.value.length, lastActiveElement.value.length);
   }
 });
+
+document.addEventListener('focusin', (e) => {
+  if (isTextInput(e.target)) {
+    lastActiveElement = e.target;
+    requestAnimationFrame(restoreFocus); 
+  }
+}, true);
+
+document.addEventListener('click', (e) => {
+  if (lastActiveElement && lastActiveElement !== e.target) {
+    lastActiveElement.blur();  
+    lastActiveElement = null; 
+  } 
+});
+
+function deleteText(element) {
+  document.addEventListener('click', (e) => {
+    if (lastActiveElement && lastActiveElement !== e.target) {
+      lastActiveElement.blur();  
+      lastActiveElement = null; 
+    } 
+  });
+  const start = element.selectionStart;
+  const end = element.selectionEnd;
+  const value = element.value;
+
+  if (start > 0 && start === end) {
+    // ลบตัวอักษรก่อนเคอร์เซอร์
+    element.value = value.slice(0, start - 1) + value.slice(end);
+    element.setSelectionRange(start - 1, start - 1);
+  } else if (start !== end) {
+    // ลบข้อความที่ถูกเลือก
+    element.value = value.slice(0, start) + value.slice(end);
+    element.setSelectionRange(start, start);
+  }
+}
+
+function deleteTextStart(element) {
+  if (!element || !(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement)) {
+    console.warn("deleteTextStart: Invalid element provided");
+    return;
+  }
+
+  const start = element.selectionStart;
+  const end = element.selectionEnd;
+  const value = element.value;
+
+  if (start < value.length && start === end) {
+    // ลบตัวอักษรหลังเคอร์เซอร์
+    element.value = value.slice(0, start) + value.slice(end + 1);
+    element.setSelectionRange(start, start);
+  } else if (start !== end) {
+    // ลบข้อความที่ถูกเลือก
+    element.value = value.slice(0, start) + value.slice(end);
+    element.setSelectionRange(start, start);
+  }
+}
+
+function escapes(element) {
+  const modals = document.querySelectorAll(".modal");
+    if (modals.length === 0) {
+      document.exitFullscreen()
+      console.warn("No modals found to close.");
+    }
+    modals.forEach((modal) => {
+      modal.classList.add("hidden"); // ซ่อน modal
+    });
+}
 
 function insertText(element, key) {
   if (isTextInput(element)) {
@@ -34,38 +111,17 @@ function insertText(element, key) {
     const value = element.value || '';
     
     element.value = value.slice(0, start) + key + value.slice(end);
+    element.setSelectionRange(start + key.length, start + key.length);
     
-    requestAnimationFrame(() => {
-      element.setSelectionRange(start + key.length, start + key.length);
-      restoreFocus();
-    });
   } else {
     document.execCommand("insertText", false, key);
-  }
-}
-
-function deleteText(element) {
-  if (isTextInput(element)) {
-    const start = element.selectionStart;
-    const end = element.selectionEnd;
-    const value = element.value;
-
-    if (start > 0 && start === end) {
-      element.value = value.slice(0, start - 1) + value.slice(end);
-      element.setSelectionRange(start - 1, start - 1);
-    } else if (start !== end) {
-      element.value = value.slice(0, start) + value.slice(end);
-      element.setSelectionRange(start, start);
-    }
-  } else {
-    document.execCommand("delete");
   }
 }
 
 function insertNewLine(element) {
   console.log("Element tag:", element.tagName);
   
-  document.addEventListener('focusin', (e) => {
+  document.addEventListener('focus', (e) => {
     if (isTextInput(e.target)) {
       lastActiveElement = e.target;
       requestAnimationFrame(restoreFocus);
@@ -118,20 +174,10 @@ function triggerKeyEvent(element, key) {
 
 function isTextInput(element) {
   return (
-    element &&
-    (element.tagName === "TEXTAREA" ||
-      (element.tagName === "INPUT" &&
-        (element.type === "text" ||
-          element.type === "password" ||
-          element.type === "search" ||
-          element.type === "email" ||
-          element.type === "tel" ||
-          element.type === "number"))))
+    element instanceof HTMLInputElement ||
+    element instanceof HTMLTextAreaElement
+  );
 }
-
-document.querySelectorAll("input, textarea").forEach(input => {
-  input.setAttribute('autocomplete', 'off');  
-});
 
 function restoreFocus() {
   if (lastActiveElement && isTextInput(lastActiveElement)) {
@@ -144,16 +190,11 @@ function restoreFocus() {
       requestAnimationFrame(() => {
         lastActiveElement.focus();
         
-        if (typeof lastActiveElement.value === 'string') {
-          const length = lastActiveElement.value.length;
-          lastActiveElement.setSelectionRange(length, length);
-        }
-        
         lastActiveElement.style.caretColor = 'auto';
         lastActiveElement.style.webkitUserSelect = 'text';
         lastActiveElement.style.userSelect = 'text';
       });
-    }, 50); 
+    }, 20); 
   }
 }
 
@@ -234,23 +275,22 @@ function handleKeyboardMini() {
     lastActiveElement = document.activeElement;
     
     if (!keyboardFrameMini) {
-      keyboardFrameMini = createIframe("MiniScreen/index.html", "800px", "270px");
+      keyboardFrameMini = createIframe("MiniScreen/index.html");
       setPosition(position, keyboardFrameMini);
       document.body.appendChild(keyboardFrameMini);
     } else {
       toggleFrameDisplay(keyboardFrameMini);
     }
-    
-    requestAnimationFrame(restoreFocus);
   });
 }
 
-function createIframe(src, width, height) {
+function createIframe(src) {
+  requestAnimationFrame(restoreFocus);
   const frame = document.createElement("iframe");
   frame.src = chrome.runtime.getURL(src);
   frame.style.position = "fixed";
-  frame.style.width = width;
-  frame.style.height = height;
+  frame.style.width = "1200px";
+  frame.style.height = "301px";
   frame.style.backgroundColor = "#f5f5f5";
   frame.style.border = "2px solid #222";
   frame.style.borderRadius = "15px"; 
