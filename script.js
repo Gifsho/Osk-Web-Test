@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
   document.body.innerHTML = `
-    <div class="bgC rounded" id="content">
-      <div class="bgC flex items-center justify-center p-1">
+    <div class="rounded">
+      <div class="flex items-center justify-center p-1">
         <select id="layout-select" class="p-1 border border-gray-300 rounded">
           <option value="full" selected>Full keyboard</option>
           <option value="english-keyboard">English Keyboard</option>
@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
         </select>
         
       </div>
-      <div id="keyboard" class="bgC p-1 rounded" tabindex="-1" aria-hidden="true"></div>
+      <div id="keyboard" class="p-1 rounded"></div>
     </div>
   `;
   const keyboard = document.getElementById("keyboard");
@@ -200,7 +200,8 @@ document.addEventListener("DOMContentLoaded", function () {
       ["1", "2", "3", "%"],
       ["4", "5", "6", "."],
       ["7", "8", "9", "="],
-      ["(", "0", ")", "Backspace"],
+      ["(", "0", ")", "="],
+      ["Backspace"],
     ],
     "Thai-keyboard": [
       [
@@ -395,6 +396,8 @@ document.addEventListener("DOMContentLoaded", function () {
               ? "home"
               : messageKey === "end"
               ? "end"
+              : messageKey === "←"
+              ? "←"
               : "typeKey",
           key: messageKey,
           encryptedKey: encryptedMessage,

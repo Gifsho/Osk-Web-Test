@@ -1,20 +1,15 @@
 let keyboardFrameMini = null;
 let keyboardFrameFull = null;
 let settingdFrame = null;
-let focusTimeout = null; 
+let focusTimeout = null;
 let lastActiveElement = null;
+let isTyping = false;
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   lastActiveElement = document.activeElement;
+  checkLastActiveElement = lastActiveElement && isTextInput(lastActiveElement);
 
-  if (request.action === "typeKey") {
-    insertText(lastActiveElement, request.key);
-  } else if (request.action === "backspace") {
-    deleteText(lastActiveElement);
-  } else if (request.action === "Enter") {
-    insertNewLine(lastActiveElement);
-    restoreFocus();
-  } else if (request.action === "SOSK-MINI") {
+  if (request.action === "SOSK-MINI") {
     handleKeyboardMini();
   } else if (request.action === "SOSK-FULLSCREEN") {
     handleKeyboardFullscreen();
@@ -22,24 +17,37 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     handleSettingsFrame();
   } else if (request.action === "CLOSE_SOSK") {
     hideAllFrames();
+  } else if (request.action === "typeKey") {
+    insertText(lastActiveElement, request.key);
+  } else if (request.action === "backspace") {
+    deleteText(lastActiveElement);
+  } else if (request.action === "Enter") {
+    insertNewLine(lastActiveElement);
   } else if (request.action === "esc") {
-    restoreFocus();
     escapes();
-  } else if (request.action === "del⌦") {
+  } else if (request.action === "del⌦" && checkLastActiveElement) {
     deleteTextStart(lastActiveElement);
-    restoreFocus();
-  } else if (request.action === "home") {
+  } else if (request.action === "home" && checkLastActiveElement) {
     lastActiveElement.setSelectionRange(0, 0);
-    restoreFocus();
-  } else if (request.action === "end" && lastActiveElement && isTextInput(lastActiveElement)) {
-    lastActiveElement.setSelectionRange(lastActiveElement.value.length, lastActiveElement.value.length);
+  } else if (request.action === "end" && checkLastActiveElement) {
+    lastActiveElement.setSelectionRange(
+      lastActiveElement.value.length,
+      lastActiveElement.value.length
+    );
+  } else if (request.action === "←" && checkLastActiveElement) {
+    lastActiveElement.setSelectionRange(
+      Math.max(0, lastActiveElement.selectionStart - 1),
+      Math.max(0, lastActiveElement.selectionStart - 1)
+    )
   }
 });
 
-document.addEventListener('focusin', (e) => {
+document.addEventListener("focusin", (e) => {
   if (isTextInput(e.target)) {
     lastActiveElement = e.target;
-    requestAnimationFrame(restoreFocus); 
+    if (!isTyping) {
+      restoreFocus();
+    }
   }
 }, true);
 
@@ -50,69 +58,75 @@ document.addEventListener('click', (e) => {
   } 
 });
 
-function deleteText(element) {
-  document.addEventListener('click', (e) => {
-    if (lastActiveElement && lastActiveElement !== e.target) {
-      lastActiveElement.blur();  
-      lastActiveElement = null; 
-    } 
-  });
-  const start = element.selectionStart;
-  const end = element.selectionEnd;
-  const value = element.value;
+function LeftCaret() {
+  if (isTextInput(element)) {
+    element.setSelectionRange(
+      Math.max(0, start - 1),
+      Math.max(0, start - 1)
+    ) 
+  }
+}
 
-  if (start > 0 && start === end) {
-    // ลบตัวอักษรก่อนเคอร์เซอร์
-    element.value = value.slice(0, start - 1) + value.slice(end);
-    element.setSelectionRange(start - 1, start - 1);
-  } else if (start !== end) {
-    // ลบข้อความที่ถูกเลือก
-    element.value = value.slice(0, start) + value.slice(end);
-    element.setSelectionRange(start, start);
+function deleteText(element) {
+  if (isTextInput(element)) {
+    const start = element.selectionStart;
+    const value = element.value || " ";
+
+    console.log("Before deletion:", start, value);
+
+    if (start > 0) {
+      element.value = value.slice(0, start - 1) + value.slice(start);
+
+      console.log("After deletion:", element.value);
+
+      element.setSelectionRange(start - 1, start - 1);
+      console.log(
+        "Caret position after setSelectionRange:",
+        element.selectionStart
+      );
+    }
+  } else {
+    document.execCommand("delete");
   }
 }
 
 function deleteTextStart(element) {
-  if (!element || !(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement)) {
-    console.warn("deleteTextStart: Invalid element provided");
-    return;
-  }
+  if (isTextInput(element)) {
+    const start = element.selectionStart;
+    const end = element.selectionEnd;
+    const value = element.value || " ";
 
-  const start = element.selectionStart;
-  const end = element.selectionEnd;
-  const value = element.value;
-
-  if (start < value.length && start === end) {
-    // ลบตัวอักษรหลังเคอร์เซอร์
-    element.value = value.slice(0, start) + value.slice(end + 1);
-    element.setSelectionRange(start, start);
-  } else if (start !== end) {
-    // ลบข้อความที่ถูกเลือก
-    element.value = value.slice(0, start) + value.slice(end);
-    element.setSelectionRange(start, start);
-  }
-}
-
-function escapes(element) {
-  const modals = document.querySelectorAll(".modal");
-    if (modals.length === 0) {
-      document.exitFullscreen()
-      console.warn("No modals found to close.");
+    if (start < value.length && start === end) {
+      // ลบตัวอักษรหลังเคอร์เซอร์
+      element.value = value.slice(0, start) + value.slice(end + 1);
+      element.setSelectionRange(start, start);
+    } else if (start !== end) {
+      // ลบข้อความที่ถูกเลือก
+      element.value = value.slice(0, start) + value.slice(end);
+      element.setSelectionRange(start, start);
     }
-    modals.forEach((modal) => {
-      modal.classList.add("hidden"); // ซ่อน modal
-    });
+  }
 }
+function escapes() {
+  const modals = document.querySelectorAll(".modal");
+  if (modals.length > 0) {
+    modals.forEach((modal) => {
+      modal.classList.add("hidden");
+    });
+  } else if (document.fullscreenElement) {
+    document.exitFullscreen();
+  }
+}
+
 
 function insertText(element, key) {
   if (isTextInput(element)) {
     const start = element.selectionStart;
     const end = element.selectionEnd;
-    const value = element.value || '';
-    
+    const value = element.value || "";
+
     element.value = value.slice(0, start) + key + value.slice(end);
     element.setSelectionRange(start + key.length, start + key.length);
-    
   } else {
     document.execCommand("insertText", false, key);
   }
@@ -120,13 +134,17 @@ function insertText(element, key) {
 
 function insertNewLine(element) {
   console.log("Element tag:", element.tagName);
-  
-  document.addEventListener('focus', (e) => {
-    if (isTextInput(e.target)) {
-      lastActiveElement = e.target;
-      requestAnimationFrame(restoreFocus);
-    }
-  }, true);
+
+  document.addEventListener(
+    "focus",
+    (e) => {
+      if (isTextInput(e.target)) {
+        lastActiveElement = e.target;
+        requestAnimationFrame(restoreFocus);
+      }
+    },
+    true
+  );
 
   if (isTextInput(element)) {
     if (element.tagName === "TEXTAREA") {
@@ -135,17 +153,23 @@ function insertNewLine(element) {
       const value = element.value;
       element.value = value.slice(0, start) + "\n" + value.slice(end);
       element.setSelectionRange(start + 1, start + 1);
-    } else if (element.tagName === "INPUT" || element.type === "password" || element.type === "text") {
+    } else if (
+      element.tagName === "INPUT" ||
+      element.type === "password" ||
+      element.type === "text"
+    ) {
       if (element.form) {
-        const submitButton = element.form.querySelector('input[type="submit"], button[type="submit"], button[type="button"], button[onclick]');
+        const submitButton = element.form.querySelector(
+          'input[type="submit"], button[type="submit"], button[type="button"], button[onclick]'
+        );
         if (submitButton) {
-          submitButton.setAttribute('autocomplete', 'off');
+          submitButton.setAttribute("autocomplete", "off");
           submitButton.click();
         } else {
-          element.form.submit(); 
+          element.form.submit();
         }
       } else {
-        element.value += '\n'; 
+        element.value += "\n";
       }
     }
   } else {
@@ -175,28 +199,31 @@ function triggerKeyEvent(element, key) {
 function isTextInput(element) {
   return (
     element instanceof HTMLInputElement ||
-    element instanceof HTMLTextAreaElement
+    element instanceof HTMLTextAreaElement ||
+    element.isContentEditable
   );
 }
+
 
 function restoreFocus() {
   if (lastActiveElement && isTextInput(lastActiveElement)) {
     if (focusTimeout) {
-      clearTimeout(focusTimeout);  
+      clearTimeout(focusTimeout);
     }
 
     focusTimeout = setTimeout(() => {
       lastActiveElement.blur();
       requestAnimationFrame(() => {
         lastActiveElement.focus();
-        
-        lastActiveElement.style.caretColor = 'auto';
-        lastActiveElement.style.webkitUserSelect = 'text';
-        lastActiveElement.style.userSelect = 'text';
+
+        lastActiveElement.style.caretColor = "auto";
+        lastActiveElement.style.webkitUserSelect = "text";
+        lastActiveElement.style.userSelect = "text";
       });
-    }, 20); 
+    }, 55);
   }
 }
+
 
 function handleKeyboardFullscreen() {
   if (!keyboardFrameFull) {
@@ -260,7 +287,7 @@ window.addEventListener("DOMContentLoaded", () => {
     console.error("chrome.tabs.onActivated is undefined!");
   }
 
-  window.addEventListener('blur', () => {
+  window.addEventListener("blur", () => {
     hideAllFrames();
   });
 
@@ -273,7 +300,7 @@ function handleKeyboardMini() {
   chrome.storage.sync.get(["keyboardPosition"], (result) => {
     let position = result.keyboardPosition || "bottom-right";
     lastActiveElement = document.activeElement;
-    
+
     if (!keyboardFrameMini) {
       keyboardFrameMini = createIframe("MiniScreen/index.html");
       setPosition(position, keyboardFrameMini);
@@ -289,35 +316,32 @@ function createIframe(src) {
   const frame = document.createElement("iframe");
   frame.src = chrome.runtime.getURL(src);
   frame.style.position = "fixed";
-  frame.style.width = "1200px";
-  frame.style.height = "301px";
+  frame.style.minWidth = "1200px";
+  frame.style.minHeight = "301px";
   frame.style.backgroundColor = "#f5f5f5";
   frame.style.border = "2px solid #222";
-  frame.style.borderRadius = "15px"; 
-  frame.style.zIndex = '9998';
+  frame.style.borderRadius = "15px";
+  frame.style.zIndex = "9998";
   frame.style.margin = "5px";
   frame.style.padding = "15px";
-  frame.style.cursor = "move";  // เพิ่ม cursor ที่เหมาะสมให้รู้ว่าเป็นการลาก
+  frame.style.cursor = "move"; // เพิ่ม cursor ที่เหมาะสมให้รู้ว่าเป็นการลาก
 
   // เพิ่มการฟังเหตุการณ์การคลิกเพื่อเริ่มลาก
   frame.addEventListener("mousedown", startDrag);
-
-  frame.setAttribute("tabindex", "-1");
-  frame.setAttribute("aria-hidden", "true");
 
   return frame;
 }
 
 // ฟังก์ชันเริ่มต้นการลาก
 function startDrag(event) {
-  this.isDragging = true;  // ตั้งค่า flag ว่าเริ่มลากแล้ว
+  this.isDragging = true; // ตั้งค่า flag ว่าเริ่มลากแล้ว
   this.offsetX = event.clientX - this.offsetLeft;
   this.offsetY = event.clientY - this.offsetTop;
 
   // เพิ่มการฟังเหตุการณ์การเคลื่อนที่ของเมาส์ขณะลาก
   document.addEventListener("mousemove", drag.bind(this));
   document.addEventListener("mouseup", () => {
-    this.isDragging = false;  // เมื่อปล่อยเมาส์ให้หยุดลาก
+    this.isDragging = false; // เมื่อปล่อยเมาส์ให้หยุดลาก
     document.removeEventListener("mousemove", drag.bind(this));
   });
 }
@@ -357,7 +381,6 @@ function toggleFrameDisplay(frame) {
   frame.setAttribute("aria-hidden", isHidden ? "false" : "true");
 }
 
-
 function hideAllFrames() {
   if (keyboardFrameMini && keyboardFrameMini.style.display !== "none") {
     keyboardFrameMini.style.display = "none";
@@ -367,12 +390,12 @@ function hideAllFrames() {
   }
 }
 
-const style = document.createElement('style');
-style.textContent = `
-  input, textarea {
-    caret-color: auto !important;
-    -webkit-user-select: text !important;
-    user-select: text !important;
-  }
-`;
-document.head.appendChild(style);
+// const style = document.createElement('style');
+// style.textContent = `
+//   input, textarea {
+//     caret-color: auto !important;
+//     -webkit-user-select: text !important;
+//     user-select: text !important;
+//   }
+// `;
+// document.head.appendChild(style);
