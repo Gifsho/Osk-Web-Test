@@ -2,18 +2,25 @@
 <html lang="th">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Virtual Keyboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="SOSK Virtual Keyboard – Secure on-screen keyboard panel.">
+  <title>SOSK Virtual Keyboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-    <script src="../script.js"></script>
-    <script src="../set/crypto/crypto-js.min.js"></script>
-    <script src="../set/popup.js"></script>
+  <!-- Scripts loaded in correct dependency order:
+       1. browser-polyfill  – cross-browser API shim
+       2. validation        – shared validation utilities
+       3. script.js         – keyboard UI builder
+       4. crypto.js         – AES-GCM key management
+  -->
+  <script src="../browser-polyfill.js"></script>
+  <script src="../utils/validation.js"></script>
+  <script src="../script.js"></script>
+  <script src="../set/crypto.js"></script>
 </body>
 
 </html>

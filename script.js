@@ -1,26 +1,93 @@
 document.addEventListener("DOMContentLoaded", function () {
+  // Use browserAPI for cross-browser compatibility
+  const api = window.browserAPI || chrome;
+
   document.body.innerHTML = `
     <div class="rounded">
-      <div class="flex items-center justify-center p-1">
-        <select id="layout-select" class="p-1 border border-gray-300 rounded">
+      <div class="keyboard-header">
+        <select id="layout-select">
           <option value="full" selected>Full keyboard</option>
           <option value="english-keyboard">English Keyboard</option>
-          <option value="english-scrambled">English Scrambled</option>
           <option value="Thai-keyboard">Thai Keyboard</option>
-          <option value="Thai-scrambled">Thai Scrambled</option>
           <option value="numpad-keyboard">Numpad Keyboard</option>
-          <option value="scrambled-keyboard">Scrambled Keyboard</option>
+          <option value="symbols">Symbols Keyboard</option>
         </select>
-        
       </div>
-      <div id="keyboard" class="p-1 rounded"></div>
+      <div id="keyboard"></div>
     </div>
   `;
-  const keyboard = document.getElementById("keyboard");
   const layoutSelect = document.getElementById("layout-select");
+
+  const EngAlphabetShift = { "`": "~", 1: "!", 2: "@", 3: "#", 4: "$", 5: "%", 6: "^", 7: "&", 8: "*", 9: "(", 0: ")", "-": "_", "=": "+", "[": "{", "]": "}", "\\": "|", ";": ":", "'": '"', ",": "<", ".": ">", "/": "?", };
+  const ThaiAlphabetShift = { _: "%", ๅ: "+", "/": "๑", "-": "๒", ภ: "๓", ถ: "๔", "ุ": "ู", "ึ": "฿", ค: "๕", ต: "๖", จ: "๗", ข: "๘", ช: "๙", ๆ: "๐", ไ: '"', ำ: "ฎ", พ: "ฑ", ะ: "ธ", "ั": "ํ", "ี": "๋", ร: "ณ", น: "ฯ", ย: "ญ", บ: "ฐ", ล: ",", ฃ: "ฅ", ฟ: "ฤ", ห: "ฆ", ก: "ฏ", ด: "โ", เ: "ฌ", "้": "็", "่": "๋", า: "ษ", ส: "ศ", ว: "ซ", ง: ".", ผ: "(", ป: ")", แ: "ฉ", อ: "ฮ", "ิ": "ฺ", "ื": "์", ท: "?", ม: "ฒ", ใ: "ฬ", ฝ: "ฦ" };
   let shiftActive = false;
   let capsLockActive = false;
   let currentLayout = "full";
+  let isScrambled = false;
+  let isNumpadScrambled = false;
+  let isThaiScrambled = false;
+  let isSymbolsScrambled = false;
+
+  const SOSK_KEY_NAME = "soskKey";
+
+  function base64ToArrayBuffer(base64) {
+    const binaryString = atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+
+  function arrayBufferToBase64(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let binary = "";
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+  }
+
+  function storageGet(keys) {
+    return new Promise((resolve) => api.storage.sync.get(keys, resolve));
+  }
+
+  function storageSet(obj) {
+    return new Promise((resolve) => api.storage.sync.set(obj, resolve));
+  }
+
+  async function getOrCreateSoskKey() {
+    const data = await storageGet([SOSK_KEY_NAME]);
+    if (data && data[SOSK_KEY_NAME]) {
+      return data[SOSK_KEY_NAME];
+    }
+    const raw = new Uint8Array(32);
+    crypto.getRandomValues(raw);
+    const keyB64 = arrayBufferToBase64(raw.buffer);
+    await storageSet({ [SOSK_KEY_NAME]: keyB64 });
+    return keyB64;
+  }
+
+  async function importKeyFromBase64(base64Key) {
+    const keyData = base64ToArrayBuffer(base64Key);
+    return crypto.subtle.importKey(
+      "raw",
+      keyData,
+      { name: "AES-GCM" },
+      false,
+      ["encrypt"]
+    );
+  }
+
+  async function encryptText(plainText) {
+    const keyB64 = await getOrCreateSoskKey();
+    const cryptoKey = await importKeyFromBase64(keyB64);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const encoded = new TextEncoder().encode(plainText);
+    const cipherBuffer = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, cryptoKey, encoded);
+    return { iv: arrayBufferToBase64(iv.buffer), data: arrayBufferToBase64(cipherBuffer) };
+  }
 
   const specialKeys = {
     Backspace: () => sendMessageToActiveTab("backspace"),
@@ -29,320 +96,210 @@ document.addEventListener("DOMContentLoaded", function () {
     Enter: () => sendMessageToActiveTab("Enter"),
     "Shift ⇧": () => toggleShift(),
     Space: () => sendMessageToActiveTab(" "),
-    Ctrl: () => {},
-    Esc: () => {},
-    F1: () => {},
-    F2: () => {},
-    F3: () => {},
-    F4: () => {},
-    F5: () => {},
-    F6: () => {},
-    F7: () => {},
-    F8: () => {},
-    F9: () => {},
-    F10: () => {},
-    F11: () => {},
-    F12: () => {},
+    Ctrl: () => { },
+    Esc: () => { },
+    F1: () => { },
+    F2: () => { },
+    F3: () => { },
+    F4: () => { },
+    F5: () => { },
+    F6: () => { },
+    F7: () => { },
+    F8: () => { },
+    F9: () => { },
+    F10: () => { },
+    F11: () => { },
+    F12: () => { },
+    "↓": () => { },
+    "↑": () => { },
+    "←": () => sendMessageToActiveTab("←"),
+    "→": () => sendMessageToActiveTab("→"),
   };
 
   const layout = {
-    full: [
-      [
-        "Esc",
-        "F1",
-        "F2",
-        "F3",
-        "F4",
-        "F5",
-        "F6",
-        "F7",
-        "F8",
-        "F9",
-        "F10",
-        "F11",
-        "F12",
-        "DEL⌦",
-        "HOME",
-        "END",
-      ],
-      [
-        "`",
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "7",
-        "8",
-        "9",
-        "0",
-        "-",
-        "=",
-        "Backspace",
-      ].concat(["+", "-", "*", "/"]),
-      [
-        "Tab ↹",
-        "q",
-        "w",
-        "e",
-        "r",
-        "t",
-        "y",
-        "u",
-        "i",
-        "o",
-        "p",
-        "[",
-        "]",
-        "\\",
-      ].concat(["7", "8", "9", "%"]),
-      [
-        "Caps 🄰",
-        "a",
-        "s",
-        "d",
-        "f",
-        "g",
-        "h",
-        "j",
-        "k",
-        "l",
-        ";",
-        "'",
-        "Enter",
-      ].concat(["4", "5", "6", "_"]),
-      [
-        "Shift ⇧",
-        "z",
-        "x",
-        "c",
-        "v",
-        "b",
-        "n",
-        "m",
-        ",",
-        ".",
-        "/",
-        "Shift ⇧",
-        "↑",
-      ].concat(["1", "2", "3", "="]),
-      ["Space", "←", "↓", "→"].concat(["0", "."]),
+    "full": [
+      // [ "Esc", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "DEL⌦", "HOME", "END"],
+      ["`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "Backspace"].concat(["+", "-", "*", "/"]),
+      ["Tab ↹", "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[", "]", "\\"].concat(["7", "8", "9", "%"]),
+      ["Caps 🄰", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'", "Enter"].concat(["4", "5", "6", "_"]),
+      ["Shift ⇧", "z", "x", "c", "v", "b", "n", "m", ",", ".", "/", "Shift ⇧", "↑"].concat(["1", "2", "3", "="]),
+      ["scr", " ", "←", "↓", "→"].concat(["0", "."]),
     ],
     "english-keyboard": [
-      [
-        "`",
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "7",
-        "8",
-        "9",
-        "0",
-        "-",
-        "=",
-        "Backspace",
-      ],
-      [
-        "Tab ↹",
-        "q",
-        "w",
-        "e",
-        "r",
-        "t",
-        "y",
-        "u",
-        "i",
-        "o",
-        "p",
-        "[",
-        "]",
-        "\\",
-      ],
-      [
-        "Caps 🄰",
-        "a",
-        "s",
-        "d",
-        "f",
-        "g",
-        "h",
-        "j",
-        "k",
-        "l",
-        ";",
-        "'",
-        "Enter",
-      ],
+      ["`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "Backspace"],
+      ["Tab ↹", "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[", "]", "\\"],
+      ["Caps 🄰", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'", "Enter"],
       ["Shift ⇧", "z", "x", "c", "v", "b", "n", "m", ",", ".", "/", "Shift ⇧"],
-      ["Space"],
-    ],
-    "english-scrambled": [
-      ["`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "="],
-      ["Tab ↹", "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "Backspace"],
-      ["Caps 🄰", "a", "s", "d", "f", "g", "h", "j", "k", "l", "Enter"],
-      ["Shift ⇧", "z", "x", "c", "v", "b", "n", "m", "Shift ⇧"],
-      ["Space"],
+      ["scr", " "],
     ],
     "numpad-keyboard": [
-      ["+", "-", "*", "/"],
-      ["1", "2", "3", "%"],
-      ["4", "5", "6", "_"],
+      ["Scr", "+", "-", "*"],
+      ["1", "2", "3", "/"],
+      ["4", "5", "6", "%"],
       ["7", "8", "9", "."],
       ["(", "0", ")", "="],
       ["Backspace"],
     ],
-    "scrambled-keyboard": [
-      ["+", "-", "*", "/"],
-      ["1", "2", "3", "%"],
-      ["4", "5", "6", "."],
-      ["7", "8", "9", "="],
-      ["(", "0", ")", "="],
-      ["Backspace"],
-    ],
     "Thai-keyboard": [
-      [
-        "_",
-        "ๅ",
-        "/",
-        "-",
-        "ภ",
-        "ถ",
-        "ุ",
-        "ึ",
-        "ค",
-        "ต",
-        "จ",
-        "ข",
-        "ช",
-        "Backspace",
-      ],
-      [
-        "Tab ↹",
-        "ๆ",
-        "ไ",
-        "ำ",
-        "พ",
-        "ะ",
-        "ั",
-        "ี",
-        "ร",
-        "น",
-        "ย",
-        "บ",
-        "ล",
-        "ฃ",
-      ],
-      [
-        "Caps 🄰",
-        "ฟ",
-        "ห",
-        "ก",
-        "ด",
-        "เ",
-        "้",
-        "่",
-        "า",
-        "ส",
-        "ว",
-        "ง",
-        "Enter",
-      ],
+      ["_", "ๅ", "/", "-", "ภ", "ถ", "ุ", "ึ", "ค", "ต", "จ", "ข", "ช", "Backspace"],
+      ["Tab ↹", "ๆ", "ไ", "ำ", "พ", "ะ", "ั", "ี", "ร", "น", "ย", "บ", "ล", "ฃ"],
+      ["Caps 🄰", "ฟ", "ห", "ก", "ด", "เ", "้", "่", "า", "ส", "ว", "ง", "Enter"],
       ["Shift ⇧", "ผ", "ป", "แ", "อ", "ิ", "ื", "ท", "ม", "ใ", "ฝ", "Shift ⇧"],
-      ["Space"],
+      ["scr", " "],
     ],
-    "Thai-scrambled": [
-      ["ก", "ข", "ฃ", "ค", "ฅ", "ฆ", "ง", "จ", "ฉ", "ช", "ซ", "ฌ", "Backspace"],
-      ["ญ", "ฎ", "ฏ", "ฐ", "ฑ", "ฒ", "ณ", "ด", "ต", "ถ", "ท", "ธ", "น"],
-      ["บ", "ป", "ผ", "ฝ", "พ", "ฟ", "ภ", "ม", "ย", "ร", "ฤ", "Enter"],
-      ["ล", "ฦ", "ว", "ศ", "ษ", "ส", "ห", "ฬ", "อ", "ฮ"],
-      ["Space"],
-    ],
+    "symbols": [
+      ['Scr', '@', '#', '$', '%', '^', '&', '*'],
+      ['(', ')', '_', '+', '~', '`', '{', '}'],
+      ['|', '\\', ':', '!', "'", '<', '>', '?'],
+      ['/', '[', ']', '±', '§', '¶', '€', '£'],
+      ['¥', '¢', '©', '®', '™', '℅', '‰', '†'],
+      ["Backspace"]
+    ]
   };
 
   createKeyboard(currentLayout);
 
+  let _resizeTimer = null;
+  let _lastReportedW = 0;
+  let _lastReportedH = 0;
+
+  function postIframeSize() {
+    if (_resizeTimer) clearTimeout(_resizeTimer);
+    _resizeTimer = setTimeout(() => {
+      try {
+        // body has `width: max-content; height: max-content` in styles.css
+        // so scrollWidth/scrollHeight = the TRUE intrinsic content dimensions,
+        // not constrained by the current iframe viewport.
+        const w = document.body.scrollWidth;
+        const h = document.body.scrollHeight;
+
+        // Only send if size actually changed – prevents resize feedback loops
+        if (w === _lastReportedW && h === _lastReportedH) return;
+        _lastReportedW = w;
+        _lastReportedH = h;
+
+        window.parent.postMessage({ type: "sosk:resize", width: w, height: h }, "*");
+      } catch (e) {
+        // Ignore cross-origin / postMessage errors silently
+      }
+    }, 40);
+  }
+
+  window.addEventListener("load", () => requestAnimationFrame(postIframeSize));
+  window.addEventListener("resize", () => requestAnimationFrame(postIframeSize));
+
   layoutSelect.addEventListener("change", function () {
     currentLayout = this.value;
     createKeyboard(currentLayout);
+    requestAnimationFrame(postIframeSize);
   });
-
-  function updateKeyboard() {
-    var select = document.getElementById("layout-select");
-    var keyboardDiv = document.getElementById("keyboard");
-
-    // อัปเดต class ด้วยชื่อ layout ที่เลือก
-    var selectedLayout = select.value;
-    keyboardDiv.className = `p-1 rounded ${selectedLayout}`;
-    keyboardDiv.innerHTML = select.options[select.selectedIndex].text;
-  }
 
   function createKeyboard(layoutName) {
     const keyboard = document.getElementById("keyboard");
     const layoutSelect = document.getElementById("layout-select");
 
-    // อัปเดต class ด้วยชื่อ layout ที่เลือก
-    keyboard.className = `p-1 rounded ${layoutSelect.value}`;
-
-    keyboard.innerHTML = ""; // Clear existing keys
+    // Apply layout-specific class (e.g. full, english-keyboard) to container
+    keyboard.className = layoutSelect.value;
+    keyboard.innerHTML = "";
 
     layout[layoutName].forEach((row) => {
       const rowDiv = document.createElement("div");
-      rowDiv.className = `flex`;
+      rowDiv.className = "flex"; // Handled by CSS display: flex
+
       row.forEach((key, index) => {
         const keyButton = document.createElement("button");
-        keyButton.className = "key p-2 m-1 rounded border border-gray-300";
+        keyButton.className = "key";
         keyButton.textContent = key;
 
-        if (index >= row.length - 4) {
-          keyButton.classList = "key p-2 m-1 rounded border border-gray-300 concat-keys";
-        }
-
+        // Add backspace icon
         if (key === "backspace" || key === "Backspace") {
-          keyButton.innerHTML = '<i class="fa fa-backspace"></i>';
+          keyButton.innerHTML = '<i class="fa-solid fa-delete-left"></i>';
         }
 
-        if (
-          [
-            "Backspace",
-            "Tab ↹",
-            "Enter",
-            "Shift ⇧",
-            "Ctrl",
-            "Alt",
-            "Caps 🄰",
-            "Space",
-          ].includes(key)
-        ) {
-          keyButton.classList.add("w-28");
+        // Special classes for scramble button
+        if (key === "scr" || key === "Scr") {
+          keyButton.className = "scr";
+        }
+
+        // Add concat-keys class to the last 4 keys of a row, or the scr key
+        if (index >= row.length - 4 || key === "scr" || key === "Scr") {
+          keyButton.classList.add("concat-keys");
         }
 
         keyButton.dataset.key = key;
-        keyButton.onclick = () => handleKeyPress(keyButton); // ส่ง element แทน string
+        keyButton.onclick = () => handleKeyPress(keyButton);
         rowDiv.appendChild(keyButton);
       });
       keyboard.appendChild(rowDiv);
     });
 
-    if (layoutName === "scrambled-keyboard") {
-      scrambleKeyboard();
-    }
-
-    if (layoutName === "english-scrambled") {
-      scrambleEnglishKeys();
-    }
-
-    if (layoutName === "Thai-scrambled") {
-      scrambleThaiKeys();
-    }
+    requestAnimationFrame(postIframeSize);
   }
 
   function handleKeyPress(keyButton) {
-    const activeElement = document.activeElement;
     const key = keyButton.dataset.key;
+
+    // scr สำหรับ english-keyboard
+    if (key === "scr" && currentLayout === "english-keyboard") {
+      if (!isScrambled) {
+        scrambleEnglishKeys();
+        isScrambled = true;
+      } else {
+        resetEnglishKeys();
+        isScrambled = false;
+      }
+      requestAnimationFrame(postIframeSize);
+      return;
+    }
+    // scr สำหรับ numpad-keyboard
+    if (key === "Scr" && currentLayout === "numpad-keyboard") {
+      if (!isNumpadScrambled) {
+        scrambleNumpadKeys();
+        isNumpadScrambled = true;
+      } else {
+        resetNumpadKeys();
+        isNumpadScrambled = false;
+      }
+      requestAnimationFrame(postIframeSize);
+      return;
+    }
+    // scr สำหรับ Thai-keyboard
+    if (key === "scr" && currentLayout === "Thai-keyboard") {
+      if (!isThaiScrambled) {
+        scrambleThaiKeys();
+        isThaiScrambled = true;
+      } else {
+        resetThaiKeys();
+        isThaiScrambled = false;
+      }
+      requestAnimationFrame(postIframeSize);
+      return;
+    }
+    // scr สำหรับ symbols
+    if (key === "Scr" && currentLayout === "symbols") {
+      if (!isSymbolsScrambled) {
+        scrambleSymbolsKeys();
+        isSymbolsScrambled = true;
+      } else {
+        resetSymbolsKeys();
+        isSymbolsScrambled = false;
+      }
+      requestAnimationFrame(postIframeSize);
+      return;
+    }
+    // scr สำหรับ full
+    if (key === "scr" && currentLayout === "full") {
+      if (!isSymbolsScrambled) {
+        scramblefullKeys();
+        isSymbolsScrambled = true;
+      } else {
+        // resetEnglishKeys()
+        resetfullKeys();
+        isSymbolsScrambled = false;
+      }
+      requestAnimationFrame(postIframeSize);
+      return;
+    }
 
     if (specialKeys[key]) {
       specialKeys[key]();
@@ -358,70 +315,48 @@ document.addEventListener("DOMContentLoaded", function () {
         messageKey = messageKey.toLowerCase();
       }
 
-      if (key === "Enter") {
-        if (
-          activeElement.tagName === "INPUT" ||
-          activeElement.type === "text"
-        ) {
-          if (activeElement.form) {
-            activeElement.form.submit();
-          }
-        } else {
-          sendMessageToActiveTab("\n");
-        }
-      } else if (
-        !["Backspace", "Win", "Alt", "Shift ⇧", "Ctrl"].includes(key)
-      ) {
-        sendMessageToActiveTab(messageKey);
+      if (!["Backspace", "Shift ⇧", "Ctrl", "Enter"].includes(key)) {
+        encryptText(messageKey).then((payload) => {
+          sendMessageToActiveTab({ type: "enc", payload });
+          // console.log("Encrypted Message:", payload);
+        }).catch(() => {
+          sendMessageToActiveTab(messageKey);
+        });
       }
     }
   }
 
-  function sendMessageToActiveTab(messageKey) {
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      if (tabs[0]) {
-        var encryptedMessage = sendInputToServer(messageKey);
-        // console.log("Sending message to tab:", tabs[0].id, encryptedMessage);
-        chrome.tabs.sendMessage(tabs[0].id, {
+  function sendMessageToActiveTab(message) {
+    try {
+      const messageKey = typeof message === 'string' ? message : undefined;
+      const encPayload = typeof message === 'object' && message?.type === 'enc' ? message.payload : undefined;
+
+      const messageData = {
+        source: 'SOSK_KEYBOARD',
+        type: 'keyAction',
+        data: encPayload ? {
+          action: "typeKey",
+          key: { enc: encPayload }
+        } : {
           action:
-            messageKey === "backspace"
-              ? "backspace"
-              : messageKey === "Enter"
-              ? "Enter"
-              : messageKey === "esc"
-              ? "esc"
-              : messageKey === "del⌦"
-              ? "del⌦"
-              : messageKey === "home"
-              ? "home"
-              : messageKey === "end"
-              ? "end"
-              : messageKey === "←"
-              ? "←"
-              : "typeKey",
+            messageKey === "backspace" ? "backspace" :
+              messageKey === "Enter" ? "Enter" :
+                messageKey === "esc" ? "esc" :
+                  messageKey === "del⌦" ? "del⌦" :
+                    messageKey === "home" ? "home" :
+                      messageKey === "end" ? "end" :
+                        messageKey === "←" ? "←" :
+                          messageKey === "→" ? "→" :
+                            "typeKey",
           key: messageKey,
-          encryptedKey: encryptedMessage,
-        });
-      } else {
-        console.warn("No active tab found.");
-      }
-    });
-  }
+        }
+      };
 
-  function generateSecureKey() {
-    const array = new Uint8Array(16);
-    window.crypto.getRandomValues(array);
-    return CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(array));
-  }
-
-  function sendInputToServer(messageKey) {
-    var encryptionKey = generateSecureKey();
-    var encryptedMessage = CryptoJS.AES.encrypt(messageKey, encryptionKey, {
-      mode: CryptoJS.mode.ECB,
-      padding: CryptoJS.pad.Pkcs7,
-    }).toString();
-    // console.log("Encrypted Message:", encryptedMessage);
-    return encryptedMessage;
+      window.parent.postMessage(messageData, '*');
+      console.debug('SOSK: Message sent to parent:', messageData.data.action, messageData.data.key);
+    } catch (error) {
+      console.warn('Error sending message to active tab:', error);
+    }
   }
 
   function toggleCapsLock() {
@@ -431,63 +366,16 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     document.querySelectorAll(".key").forEach((key) => {
-      if (key.dataset.key.length === 1 && /[a-zA-Zก-๙]/.test(key.dataset.key)) {
+      if (currentLayout === 'full' && key.classList.contains('concat-keys')) {
+        return;
+      }
+      const isLetter = key.dataset.key.length === 1 && /[a-zA-Z\u0E00-\u0E7F]/.test(key.dataset.key);
+      if (isLetter) {
         key.textContent = capsLockActive
           ? key.dataset.key.toUpperCase()
           : key.dataset.key.toLowerCase();
       }
-    });
-
-    const keyboardKeys = document.querySelectorAll(
-      ".key:not([data-key='Caps 🄰'])"
-    );
-    keyboardKeys.forEach((key) => {
-      const currentChar = key.textContent.trim();
-      if (
-        capsLockActive &&
-        currentLayout === "Thai-keyboard" &&
-        ThaiAlphabetShift[currentChar]
-      ) {
-        key.textContent = ThaiAlphabetShift[currentChar];
-        key.dataset.key = ThaiAlphabetShift[currentChar];
-      } else if (
-        !capsLockActive &&
-        currentLayout === "Thai-keyboard" &&
-        Object.values(ThaiAlphabetShift).includes(currentChar)
-      ) {
-        const originalKey = Object.keys(ThaiAlphabetShift).find(
-          (key) => ThaiAlphabetShift[key] === currentChar
-        );
-        if (originalKey) {
-          key.textContent = originalKey;
-          key.dataset.key = originalKey;
-        }
-      }
-
-      if (
-        capsLockActive &&
-        (currentLayout === "english-keyboard" ||
-          currentLayout === "english-scrambled")
-      ) {
-        if (EngAlphabetShift[key.dataset.key]) {
-          key.textContent = EngAlphabetShift[key.dataset.key];
-          key.dataset.key = EngAlphabetShift[key.dataset.key];
-        }
-      } else if (
-        !capsLockActive &&
-        (currentLayout === "english-keyboard" ||
-          currentLayout === "english-scrambled")
-      ) {
-        if (Object.values(EngAlphabetShift).includes(currentChar)) {
-          const originalKey = Object.keys(EngAlphabetShift).find(
-            (key) => EngAlphabetShift[key] === currentChar
-          );
-          if (originalKey) {
-            key.textContent = originalKey;
-            key.dataset.key = originalKey;
-          }
-        }
-      }
+      updateKeyContent(key, capsLockActive);
     });
   }
 
@@ -502,139 +390,51 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     document.querySelectorAll(".key").forEach((key) => {
-      if (key.dataset.key.length === 1 && /[a-zA-Zก-๙]/.test(key.dataset.key)) {
+      // Skip concat-keys for 'full' layout so they don't change on Shift
+      if (currentLayout === 'full' && key.classList.contains('concat-keys')) {
+        return;
+      }
+
+      const isLetter = key.dataset.key.length === 1 && /[a-zA-Zก-๙]/.test(key.dataset.key);
+
+      if (isLetter) {
         key.textContent = shiftActive
           ? key.dataset.key.toUpperCase()
           : key.dataset.key.toLowerCase();
       }
-    });
-
-    const keyboardKeys = document.querySelectorAll(
-      ".key:not([data-key='Shift ⇧'])"
-    );
-    keyboardKeys.forEach((key) => {
-      const currentChar = key.textContent.trim();
-      if (
-        shiftActive &&
-        currentLayout === "Thai-keyboard" &&
-        ThaiAlphabetShift[currentChar]
-      ) {
-        key.textContent = ThaiAlphabetShift[currentChar];
-        key.dataset.key = ThaiAlphabetShift[currentChar];
-      } else if (
-        !shiftActive &&
-        currentLayout === "Thai-keyboard" &&
-        Object.values(ThaiAlphabetShift).includes(currentChar)
-      ) {
-        const originalKey = Object.keys(ThaiAlphabetShift).find(
-          (key) => ThaiAlphabetShift[key] === currentChar
-        );
-        if (originalKey) {
-          key.textContent = originalKey;
-          key.dataset.key = originalKey;
-        }
-      }
-
-      if (
-        shiftActive &&
-        (currentLayout === "english-keyboard" ||
-          currentLayout === "english-scrambled")
-      ) {
-        if (EngAlphabetShift[key.dataset.key]) {
-          key.textContent = EngAlphabetShift[key.dataset.key];
-          key.dataset.key = EngAlphabetShift[key.dataset.key];
-        }
-      } else if (
-        !shiftActive &&
-        (currentLayout === "english-keyboard" ||
-          currentLayout === "english-scrambled")
-      ) {
-        if (Object.values(EngAlphabetShift).includes(currentChar)) {
-          const originalKey = Object.keys(EngAlphabetShift).find(
-            (key) => EngAlphabetShift[key] === currentChar
-          );
-          if (originalKey) {
-            key.textContent = originalKey;
-            key.dataset.key = originalKey;
-          }
-        }
-      }
+      updateKeyContent(key, shiftActive);
     });
   }
 
-  const EngAlphabetShift = {
-    "`": "~",
-    1: "!",
-    2: "@",
-    3: "#",
-    4: "$",
-    5: "%",
-    6: "^",
-    7: "&",
-    8: "*",
-    9: "(",
-    0: ")",
-    "-": "_",
-    "=": "+",
-    "[": "{",
-    "]": "}",
-    "\\": "|",
-    ";": ":",
-    "'": '"',
-    ",": "<",
-    ".": ">",
-    "/": "?",
-  };
+  /**
+   * Updates a key button's display and dataset when shift/capsLock is toggled.
+   * Unified function (was duplicated for capsLock and shift separately).
+   * @param {HTMLButtonElement} key
+   * @param {boolean} isActive - Whether shift or capsLock is active
+   */
+  function updateKeyContent(key, isActive) {
+    const currentChar = key.textContent.trim();
 
-  const ThaiAlphabetShift = {
-    _: "%",
-    ๅ: "+",
-    "/": "๑",
-    "-": "๒",
-    ภ: "๓",
-    ถ: "๔",
-    "ุ": "ู",
-    "ึ": "฿",
-    ค: "๕",
-    ต: "๖",
-    จ: "๗",
-    ข: "๘",
-    ช: "๙",
-    ๆ: "๐",
-    ไ: '"',
-    ำ: "ฎ",
-    พ: "ฑ",
-    ะ: "ธ",
-    "ั": "ํ",
-    "ี": "๋",
-    ร: "ณ",
-    น: "ฯ",
-    ย: "ญ",
-    บ: "ฐ",
-    ล: ",",
-    ฃ: "ฅ",
-    ฟ: "ฤ",
-    ห: "ฆ",
-    ก: "ฏ",
-    ด: "โ",
-    เ: "ฌ",
-    "้": "็",
-    "่": "๋",
-    า: "ษ",
-    ส: "ศ",
-    ว: "ซ",
-    ง: ".",
-    ผ: "(",
-    ป: ")",
-    แ: "ฉ",
-    อ: "ฮ",
-    "ิ": "ฺ",
-    "ื": "์",
-    ท: "?",
-    ม: "ฒ",
-    ใ: "ฬ",
-    ฝ: "ฦ",
-  };
+    const shiftMaps = {
+      'Thai-keyboard': ThaiAlphabetShift,
+      'english-keyboard': EngAlphabetShift,
+      'full': EngAlphabetShift,
+    };
+    const shiftMap = shiftMaps[currentLayout];
+
+    if (!shiftMap) return;
+
+    if (isActive && shiftMap[currentChar]) {
+      key.textContent = shiftMap[currentChar];
+      key.dataset.key = shiftMap[currentChar];
+    } else if (!isActive && Object.values(shiftMap).includes(currentChar)) {
+      const originalKey = Object.keys(shiftMap).find((k) => shiftMap[k] === currentChar);
+      if (originalKey) {
+        key.textContent = originalKey;
+        key.dataset.key = originalKey;
+      }
+    }
+  }
 
   function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
@@ -645,9 +445,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function scrambleKeyboard() {
     const keys = document.querySelectorAll(
-      ".key:not([data-key=Backspace]):not([data-key='+']):not([data-key='-']):not([data-key='*']):not([data-key='/']):not([data-key='%']):not([data-key='=']):not([data-key='.']):not([data-key='(']):not([data-key=')'])"
+      ".key:not([data-key=Backspace]):not([data-key='+']):not([data-key='-']):not([data-key='*']):not([data-key='/']):not([data-key='%']):not([data-key='=']):not([data-key='.']):not([data-key='(']):not([data-key=')']):not([data-key='_'])"
     );
-    const numbers = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
+    const numbers = "1234567890".split("");
     shuffleArray(numbers);
     keys.forEach((key, index) => {
       key.textContent = numbers[index];
@@ -657,9 +457,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function scrambleEnglishKeys() {
     const keys = document.querySelectorAll(
-      ".key:not([data-key='Backspace']):not([data-key='Caps 🄰']):not([data-key='Shift ⇧']):not([data-key='Enter']):not([data-key='Tab ↹']):not([data-key='`']):not([data-key='1']):not([data-key='2']):not([data-key='3']):not([data-key='4']):not([data-key='5']):not([data-key='6']):not([data-key='7']):not([data-key='8']):not([data-key='9']):not([data-key='0']):not([data-key='-']):not([data-key='+']):not([data-key='=']):not([data-key='-']):not([data-key='+']):not([data-key='=']):not([data-key='~']):not([data-key='!']):not([data-key='@']):not([data-key='#']):not([data-key='$']):not([data-key='%']):not([data-key='^']):not([data-key='&']):not([data-key='*']):not([data-key='(']):not([data-key=')']):not([data-key='_'])"
+      ".key:not([data-key='Backspace']):not([data-key='Space']):not([data-key='scr']):not([data-key='Caps 🄰']):not([data-key='Shift ⇧']):not([data-key='Enter']):not([data-key='Tab ↹'])"
     );
-    const englishAlphabet = "abcdefghijklmnopqrstuvwxyz".split("");
+    const englishAlphabet = "abcdefghijklmnopqrstuvwxyz[]\\;',./`1234567890-=".split("");
     shuffleArray(englishAlphabet);
     keys.forEach((key, index) => {
       key.textContent = englishAlphabet[index];
@@ -669,9 +469,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function scrambleThaiKeys() {
     const keys = document.querySelectorAll(
-      ".key:not([data-key='Backspace']):not([data-key='Caps 🄰']):not([data-key='Shift ⇧']):not([data-key='Enter'])"
+      ".key:not([data-key='Backspace']):not([data-key='scr']):not([data-key='Space']):not([data-key='Caps 🄰']):not([data-key='Shift ⇧']):not([data-key='Enter']):not([data-key='Tab ↹'])"
     );
-    const ThaiAlphabet = "กขฃคฅฆงจฉชซฌญฎฏฐฑฒณดตถทธนบปผฝพฟภมยรฤลฦวศษสหฬอฮ".split(
+    const ThaiAlphabet = "_ๅ/-ภถุึคตจขชๆไำพะัีรนยบลฃงวสา่้เดกหฟผปแอิืทมใฝ".split(
       ""
     );
     shuffleArray(ThaiAlphabet);
@@ -680,107 +480,150 @@ document.addEventListener("DOMContentLoaded", function () {
       key.dataset.key = ThaiAlphabet[index];
     });
   }
+
+  function resetEnglishKeys() {
+    const keys = document.querySelectorAll(
+      ".key:not([data-key='Backspace']):not([data-key='Space']):not([data-key='scr']):not([data-key='Caps 🄰']):not([data-key='Shift ⇧']):not([data-key='Enter']):not([data-key='Tab ↹'])"
+    );
+    const original = [
+      "`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=",
+      "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[", "]", "\\",
+      "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'",
+      "z", "x", "c", "v", "b", "n", "m", ",", ".", "/"
+    ];
+    let i = 0;
+    keys.forEach((key) => {
+      if (i < original.length) {
+        key.textContent = original[i];
+        key.dataset.key = original[i];
+        i++;
+      }
+    });
+  }
+  function resetNumpadKeys() {
+    const keys = document.querySelectorAll(
+      ".key:not([data-key='Backspace']):not([data-key='Scr']):not([data-key='Space'])"
+    );
+    const original = [
+      "+", "-", "*",
+      "1", "2", "3", "/",
+      "4", "5", "6", "%",
+      "7", "8", "9", ".",
+      "(", "0", ")", "=",
+    ];
+    let i = 0;
+    keys.forEach((key) => {
+      if (i < original.length) {
+        key.textContent = original[i];
+        key.dataset.key = original[i];
+        i++;
+      }
+    });
+  }
+
+  function scrambleNumpadKeys() {
+    const keys = document.querySelectorAll(
+      ".key:not([data-key='Backspace']):not([data-key='Scr']):not([data-key='Space'])"
+    );
+    const original = [
+      "+", "-", "*", "/",
+      "1", "2", "3", "%",
+      "4", "5", "6", "_",
+      "7", "8", "9", ".",
+      "(", "0", ")", "=",
+    ];
+    shuffleArray(original);
+    keys.forEach((key, index) => {
+      key.textContent = original[index];
+      key.dataset.key = original[index];
+    });
+  }
+  function resetThaiKeys() {
+    const keys = document.querySelectorAll(
+      ".key:not([data-key='Backspace']):not([data-key='scr']):not([data-key='Caps 🄰']):not([data-key='Shift ⇧']):not([data-key='Enter']):not([data-key='Tab ↹']):not([data-key='Space'])"
+    );
+    const original = [
+      "_", "ๅ", "/", "-", "ภ", "ถ", "ุ", "ึ", "ค", "ต", "จ", "ข", "ช",
+      "ๆ", "ไ", "ำ", "พ", "ะ", "ั", "ี", "ร", "น", "ย", "บ", "ล", "ฃ",
+      "ฟ", "ห", "ก", "ด", "เ", "้", "่", "า", "ส", "ว", "ง",
+      "ผ", "ป", "แ", "อ", "ิ", "ื", "ท", "ม", "ใ", "ฝ"
+    ];
+    let i = 0;
+    keys.forEach((key) => {
+      if (i < original.length) {
+        key.textContent = original[i];
+        key.dataset.key = original[i];
+        i++;
+      }
+    });
+  }
+
+  function scramblefullKeys() {
+    const keys = document.querySelectorAll(
+      ".key:not(.concat-keys):not([data-key='scr']):not([data-key='std']):not([data-key='scr']):not([data-key=' ']):not([data-key='Backspace']):not([data-key='Caps 🄰']):not([data-key='Shift ⇧']):not([data-key='Enter']):not([data-key='Tab ↹'])"
+    );
+    const original = "abcdefghijklmnopqrstuvwxyz1234567890;'\\/][`,.-=".split("");
+    shuffleArray(original);
+    keys.forEach((key, index) => {
+      if (index < original.length) {
+        key.textContent = original[index];
+        key.dataset.key = original[index];
+      }
+    });
+  }
+  function resetfullKeys() {
+    const keys = document.querySelectorAll(
+      ".key:not(.concat-keys):not([data-key='scr']):not([data-key='std']):not([data-key='scr']):not([data-key=' ']):not([data-key='Backspace']):not([data-key='Caps 🄰']):not([data-key='Shift ⇧']):not([data-key='Enter']):not([data-key='Tab ↹'])"
+    );
+    const original = [
+      "`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=",
+      "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[", "]", "\\",
+      "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'",
+      "z", "x", "c", "v", "b", "n", "m", ",", ".", "/"
+    ];
+    keys.forEach((key, index) => {
+      if (index < original.length) {
+        key.textContent = original[index];
+        key.dataset.key = original[index];
+      }
+    });
+  }
+
+  function scrambleSymbolsKeys() {
+    const keys = document.querySelectorAll(
+      ".key:not([data-key='Backspace']):not([data-key='Scr']):not([data-key='Space'])"
+    );
+    const original = [
+      '"', '@', '#', '$', '%', '^', '&', '*',
+      '(', ')', '_', '+', '~', '`', '{', '}',
+      '|', '\\', ':', '!', "'", '<', '>', '?',
+      '/', '[', ']', '±', '§', '¶', '€', '£',
+      '¥', '¢', '©', '®', '™', '℅', '‰', '†'
+    ];
+    shuffleArray(original);
+    keys.forEach((key, index) => {
+      key.textContent = original[index];
+      key.dataset.key = original[index];
+    });
+  }
+  function resetSymbolsKeys() {
+    const keys = document.querySelectorAll(
+      ".key:not([data-key='Backspace']):not([data-key='Scr']):not([data-key='Space'])"
+    );
+    const original = [
+      '"', '@', '#', '$', '%', '^', '&', '*',
+      '(', ')', '_', '+', '~', '`', '{', '}',
+      '|', '\\', ':', '!', "'", '<', '>', '?',
+      '/', '[', ']', '±', '§', '¶', '€', '£',
+      '¥', '¢', '©', '®', '™', '℅', '‰', '†'
+    ];
+    let i = 0;
+    keys.forEach((key) => {
+      if (i < original.length) {
+        key.textContent = original[i];
+        key.dataset.key = original[i];
+        i++;
+      }
+    });
+  }
 });
-
-// //----------------
-// // ฟังก์ชันหลักในการป้องกันการจับภาพหน้าจอ
-// function preventScreenCapture() {
-//     // ป้องกันการใช้งาน getDisplayMedia
-//     navigator.mediaDevices.getDisplayMedia = function () {
-//         showBlackScreen(true);
-//         return Promise.reject("การจับภาพหน้าจอถูกป้องกัน");
-//     };
-
-//     // ป้องกันการใช้งาน getUserMedia
-//     if (navigator.getUserMedia) {
-//         navigator.getUserMedia = function () {
-//             showBlackScreen(true);
-//             return Promise.reject("การจับภาพหน้าจอถูกป้องกัน");
-//         };
-//     }
-
-//     // ป้องกันการใช้งาน PrintScreen และ F12 พร้อมแจ้งเตือน
-//     document.addEventListener('keyup', function (event) {
-//         console.log('Key pressed:', event.key); // บันทึกการกดปุ่มลงใน Console
-//         if (event.key === "PrintScreen" || event.key === "F12") {
-//             showBlackScreen(true);
-//             console.log('Screen capture attempt detected!');
-//             event.preventDefault();
-//         }
-//     });
-
-//     // ตรวจจับการใช้งาน screen capture ของ third-party logger พร้อมแจ้งเตือน
-//     window.addEventListener('beforeprint', function (event) {
-//         showBlackScreen(true);
-//         console.log('Screen capture attempt detected!');
-//         event.preventDefault();
-//     });
-
-//     // ตรวจจับการใช้ screen.capture ของ third-party logger พร้อมแจ้งเตือน
-//     if (navigator.mediaDevices) {
-//         navigator.mediaDevices.getUserMedia = function (constraints) {
-//             if (constraints && constraints.video && constraints.video.mediaSource === 'screen') {
-//                 showBlackScreen(true);
-//                 console.log('Screen capture attempt detected!');
-//                 return Promise.reject("การจับภาพหน้าจอถูกป้องกัน");
-//             }
-//             return navigator.mediaDevices.getUserMedia(constraints);
-//         };
-//     }
-// }
-
-// // ฟังก์ชันเพื่อแสดงหน้าจอสีดำ
-// function showBlackScreen(autoClose = false) {
-//     const blackScreen = document.createElement('div');
-//     blackScreen.style.position = 'fixed';
-//     blackScreen.style.zIndex = '10000';
-//     blackScreen.style.left = '0';
-//     blackScreen.style.top = '0';
-//     blackScreen.style.width = '100%';
-//     blackScreen.style.height = '100%';
-//     blackScreen.style.backgroundColor = 'black';
-
-//     const button = document.createElement('button');
-//     button.textContent = 'Close';
-//     button.style.position = 'absolute';
-//     button.style.top = '10px';
-//     button.style.right = '10px';
-//     button.style.padding = '10px';
-//     button.style.backgroundColor = 'red';
-//     button.style.color = 'white';
-//     button.style.border = 'none';
-//     button.style.cursor = 'pointer';
-//     button.addEventListener('click', () => {
-//         if (document.fullscreenElement) {
-//             document.exitFullscreen();
-//         }
-//         blackScreen.remove();
-//     });
-//     blackScreen.appendChild(button);
-
-//     document.body.appendChild(blackScreen);
-
-//     // เรียก Fullscreen API เพื่อทำให้ blackScreen เต็มหน้าจอ
-//     if (blackScreen.requestFullscreen) {
-//         blackScreen.requestFullscreen();
-//     } else if (blackScreen.mozRequestFullScreen) { // Firefox
-//         blackScreen.mozRequestFullScreen();
-//     } else if (blackScreen.webkitRequestFullscreen) { // Chrome, Safari and Opera
-//         blackScreen.webkitRequestFullscreen();
-//     } else if (blackScreen.msRequestFullscreen) { // IE/Edge
-//         blackScreen.msRequestFullscreen();
-//     }
-
-//     // ปิด blackScreen อัตโนมัติหลังจาก 3 วินาที (3000 มิลลิวินาที) ถ้า autoClose เป็น true
-//     if (autoClose) {
-//         setTimeout(() => {
-//             if (document.fullscreenElement) {
-//                 document.exitFullscreen();
-//             }
-//             blackScreen.remove();
-//         }, 3000); // สามารถปรับเวลาได้ตามที่ต้องการ
-//     }
-// }
-
-// // เรียกใช้งานฟังก์ชันเพื่อป้องกันการจับภาพหน้าจอ
-// preventScreenCapture();

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="SOSK On-Screen Keyboard – Secure virtual keyboard for Chrome.">
+  <title>SOSK Keyboard</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+  <div class="card">
+    <img src="/icons/icon.png" alt="SOSK Logo" width="52" height="52" class="card__logo" />
+    <h1 class="card__title">SOSK Keyboard</h1>
+
+    <span id="status-badge" class="status-badge status-badge--off" aria-live="polite">
+      <span class="status-dot"></span>
+      <span id="status-text">OFF</span>
+    </span>
+
+    <!-- Tab error notice – shown when the active tab cannot be scripted -->
+    <div id="tab-error" class="tab-error" style="display:none;" role="alert">
+      <span class="tab-error__icon">⚠️</span>
+      <span id="tab-error-msg">Go to a regular webpage to use SOSK Keyboard.</span>
+    </div>
+    <ul class="action-list">
+      <li>
+        <button id="SOSK-MINI" class="btn-primary" type="button" aria-label="Toggle virtual keyboard">
+          Toggle Keyboard
+        </button>
+      </li>
+      <li>
+        <button id="settings" class="btn-link" type="button" aria-label="Open usage guide">
+          📖 How to use
+        </button>
+      </li>
+    </ul>
+
+    <p class="card__footer">Secure On-Screen Keyboard v1.0</p>
+  </div>
+
+  <script src="/browser-polyfill.js"></script>
+  <script src="popup.js"></script>
+</body>
+
+</html>
