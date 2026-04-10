@@ -1,7 +1,8 @@
 Open Browser testing on 
-- chrome ✔
-- opera ✔
-- microsoft eagd ✔
+- Chrome ✔
+- Opera ✔
+- Microsoft Eagd ✔
+- Firefox ✔
 
 On-Screen Keyboard
 - Layout (Dropdowns) -> (1) English, (2) Thai, (3) Numpad, (4) English (Scramble) , (5) Thai (Scramble) , (6) Numpad (Scramble)
