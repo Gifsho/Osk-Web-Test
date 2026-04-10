@@ -20,12 +20,12 @@
   - Numpad (Scramble)
 - AES-GCM encryption workflow for secure input handling
 - Extension options page for configuration
-- Compatible with Chromium-based browsers
+- Compatible with both Chromium-based and Gecko-based browsers.
 
 ### Browser Compatibility
-- Google Chrome
-- Opera
-- Microsoft Edge
+- Google Chrome ✔
+- Opera ✔
+- Microsoft Edge ✔
 
 ### Project Structure
 - `manifest.json` - Chrome Extension Manifest V3 configuration
@@ -87,12 +87,12 @@ The project includes demonstrations/tests against keylogger scenarios (for examp
   - Numpad (Scramble)
 - มีการใช้งานกระบวนการเข้ารหัสแบบ AES-GCM เพื่อเพิ่มความปลอดภัยของข้อมูลนำเข้า
 - มีหน้า Options สำหรับตั้งค่าการทำงานของส่วนขยาย
-- รองรับเบราว์เซอร์ตระกูล Chromium
+- รองรับการใช้งานทั้งเบราว์เซอร์ที่ใช้ Chromium และ Gecko
 
 ### เบราว์เซอร์ที่รองรับ
-- Google Chrome
-- Opera
-- Microsoft Edge
+- Google Chrome ✔
+- Opera ✔
+- Microsoft Edge ✔
 
 ### โครงสร้างโครงการ
 - `manifest.json` - ไฟล์กำหนดค่า Chrome Extension Manifest V3
