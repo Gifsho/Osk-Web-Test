@@ -1,88 +1,149 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <title>Settings</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f0f0f5;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .container {
-            background-color: #ffffff;
-            padding: 30px 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            width: 100%;
-            max-width: 400px;
-        }
-        h1 {
-            font-size: 24px;
-            color: #333333;
-            margin-bottom: 20px;
-        }
-        label {
-            font-size: 16px;
-            color: #555555;
-            margin-bottom: 5px;
-            display: block;
-            text-align: left;
-        }
-        select {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 20px;
-            border: 1px solid #cccccc;
-            border-radius: 5px;
-            background-color: #ffffff;
-            font-size: 14px;
-        }
-        button {
-            background-color: #007bff;
-            color: #ffffff;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s ease;
-            width: 100%;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .section {
-            margin-bottom: 20px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container shadow-2xl">
-        <h1>Settings</h1>
-        <div class="section">
-            <label for="position">Select Keyboard Position:</label>
-            <select id="position">
-                <option value="bottom-right">Bottom Right</option>
-                <option value="bottom-left">Bottom Left</option>
-                <option value="top-right">Top Right</option>
-                <option value="top-left">Top Left</option>
-            </select>
-        </div>
-        <img src="https://github.com/Gifsho/pic/blob/main/Screenshot%202025-01-21%20232808.png?raw=true" width="400px" style="margin-top: -20px; margin-bottom: 20px; border-color: #000;" class="shadow-2xl">
-        <button id="save" class="shadow-2xl">Save</button>
-    </div>
 
-    <script src="../content.js"></script>
-    
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="SOSK On-Screen Keyboard – How to use guide.">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <title>SOSK – How to Use</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      background:
+        radial-gradient(1200px 400px at 10% -10%, rgba(59, 130, 246, .12), transparent 60%),
+        radial-gradient(1200px 400px at 110% 10%, rgba(99, 102, 241, .12), transparent 60%),
+        #f3f4f6;
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: #fff;
+      padding: 28px;
+      border-radius: 14px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, .08);
+      width: 100%;
+      max-width: 540px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #1d4ed8;
+      background: #eff6ff;
+      border: 1px solid #dbeafe;
+      border-radius: 9999px;
+      padding: 6px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 22px;
+      color: #111827;
+      margin-bottom: 14px;
+      font-weight: 800;
+    }
+
+    h2 {
+      font-size: 16px;
+      color: #1f2937;
+      font-weight: 700;
+      margin: 18px 0 8px;
+    }
+
+    ul {
+      padding-left: 20px;
+      color: #374151;
+    }
+
+    li {
+      margin: 6px 0;
+      line-height: 1.6;
+    }
+
+    img {
+      width: 100%;
+      margin: 12px 0 18px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .06);
+    }
+
+    .tip {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: #166534;
+      font-size: 13px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <span class="badge">
+      <i class="fa-solid fa-keyboard"></i> SOSK v1.0
+    </span>
+
+    <h1>How to Use SOSK Keyboard</h1>
+
+    <img src="https://github.com/Gifsho/pic/blob/main/Screenshot%202025-01-21%20232808.png?raw=true"
+      alt="SOSK keyboard screenshot">
+
+    <h2>Getting Started</h2>
+    <ul>
+      <li>Click into any text field on the page you want to type in.</li>
+      <li>Click the SOSK extension icon in your toolbar.</li>
+      <li>Press <strong>"Show Keyboard"</strong> to open the floating keyboard.</li>
+      <li>Use the dropdown at the top of the keyboard to switch layouts.</li>
+    </ul>
+
+    <h2>Available Layouts</h2>
+    <ul>
+      <li><strong>Full Keyboard</strong> – English + Numpad combined</li>
+      <li><strong>English</strong> – Standard QWERTY layout</li>
+      <li><strong>Thai</strong> – Thai character layout</li>
+      <li><strong>Numpad</strong> – Numeric keypad</li>
+      <li><strong>Symbols</strong> – Special characters and symbols</li>
+    </ul>
+
+    <h2>Scramble Mode (Security)</h2>
+    <ul>
+      <li>Click the <strong>scr</strong> key to scramble key positions.</li>
+      <li>Each scramble randomizes positions to prevent shoulder-surfing.</li>
+      <li>Click <strong>scr</strong> again to reset to standard layout.</li>
+    </ul>
+
+    <h2>Security</h2>
+    <ul>
+      <li>All keystrokes are encrypted with AES-GCM before being sent to the page.</li>
+      <li>Keys are decrypted in the content script – never exposed in plaintext over messaging.</li>
+    </ul>
+
+    <div class="tip">
+      💡 <strong>Tip:</strong> The floating keyboard can be dragged anywhere on the page for convenience.
+    </div>
+  </div>
 </body>
+
 </html>

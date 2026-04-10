@@ -1,0 +1,10 @@
+{
+  "name": "sosk-extension",
+  "version": "2.0.0",
+  "description": "SOSK - Secure On-Screen Keyboard",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "author": "Yossy",
+  "license": "ISC"
+}
