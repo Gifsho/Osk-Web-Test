@@ -29,52 +29,27 @@
   /** @type {string} Storage key for AES-GCM encryption key */
   const SOSK_KEY_NAME = 'soskKey';
 
-  // ─── Crypto Helpers ────────────────────────────────────────────────────────
+  // ─── Crypto Helpers (Delegated to Background Service Worker) ───────────────
 
   /**
-   * Converts a Base64 string to an ArrayBuffer.
-   * @param {string} base64
-   * @returns {ArrayBuffer}
+   * Decrypts an encrypted payload using the background service worker.
+   * This bypasses the window.crypto.subtle HTTP restriction.
+   * @param {{ iv: string, data: string }} payload
+   * @returns {Promise<string>}
    */
-  function base64ToArrayBuffer(base64) {
-    const binaryString = atob(base64);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-    return bytes.buffer;
-  }
-
-  /**
-   * Converts an ArrayBuffer to a Base64 string.
-   * @param {ArrayBuffer} buffer
-   * @returns {string}
-   */
-  function arrayBufferToBase64(buffer) {
-    const bytes = new Uint8Array(buffer);
-    let binary = '';
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
-  }
-
-  /**
-   * Wraps chrome.storage.sync.get in a Promise.
-   * Catches context invalidated errors when extension is reloaded.
-   * @param {string[]} keys
-   * @returns {Promise<Object>}
-   */
-  function storageGet(keys) {
+  function decryptText(payload) {
     return new Promise((resolve, reject) => {
       try {
-        api.storage.sync.get(keys, (res) => {
-          if (api.runtime && api.runtime.lastError) {
-             reject(new Error(api.runtime.lastError.message));
-          } else {
-             resolve(res);
+        api.runtime.sendMessage({ action: 'bg_decrypt', payload }, (res) => {
+          if (api.runtime.lastError) {
+            const msg = api.runtime.lastError.message || '';
+            if (msg.includes('Extension context invalidated')) {
+              return reject(new Error('EXTENSION_INVALIDATED'));
+            }
+            return reject(new Error(msg));
           }
+          if (!res || !res.success) return reject(new Error(res ? res.error : 'Decryption failed in background'));
+          resolve(res.plainText);
         });
       } catch (err) {
         if (err.message && err.message.includes('Extension context invalidated')) {
@@ -87,55 +62,32 @@
   }
 
   /**
-   * Imports a Base64-encoded AES-GCM key for decryption.
-   * @param {string} base64Key
-   * @returns {Promise<CryptoKey>}
-   */
-  async function importKeyFromBase64(base64Key) {
-    const keyData = base64ToArrayBuffer(base64Key);
-    return crypto.subtle.importKey('raw', keyData, { name: 'AES-GCM' }, false, ['decrypt']);
-  }
-
-  /**
-   * Imports a Base64-encoded AES-GCM key for encryption.
-   * @param {string} base64Key
-   * @returns {Promise<CryptoKey>}
-   */
-  async function importKeyForEncrypt(base64Key) {
-    const keyData = base64ToArrayBuffer(base64Key);
-    return crypto.subtle.importKey('raw', keyData, { name: 'AES-GCM' }, false, ['encrypt']);
-  }
-
-  /**
-   * Decrypts an encrypted payload using the stored AES-GCM key.
-   * @param {{ iv: string, data: string }} payload
-   * @returns {Promise<string>}
-   */
-  async function decryptText(payload) {
-    const data = await storageGet([SOSK_KEY_NAME]);
-    const keyB64 = data && data[SOSK_KEY_NAME];
-    if (!keyB64) throw new Error('Missing encryption key in storage');
-    const cryptoKey = await importKeyFromBase64(keyB64);
-    const iv = new Uint8Array(base64ToArrayBuffer(payload.iv));
-    const cipher = base64ToArrayBuffer(payload.data);
-    const plainBuffer = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, cryptoKey, cipher);
-    return new TextDecoder().decode(plainBuffer);
-  }
-
-  /**
-   * Encrypts plain text using the stored AES-GCM key.
+   * Encrypts plain text using the background service worker.
    * @param {string} plainText
    * @returns {Promise<{ iv: string, data: string }>}
    */
-  async function encryptText(plainText) {
-    const data = await storageGet([SOSK_KEY_NAME]);
-    const keyB64 = data && data[SOSK_KEY_NAME];
-    if (!keyB64) throw new Error('Missing encryption key in storage');
-    const cryptoKey = await importKeyForEncrypt(keyB64);
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    const encoded = new TextEncoder().encode(plainText);
-    const cipherBuffer = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, cryptoKey, encoded);
-    return { iv: arrayBufferToBase64(iv.buffer), data: arrayBufferToBase64(cipherBuffer) };
+  function encryptText(plainText) {
+    return new Promise((resolve, reject) => {
+      try {
+        api.runtime.sendMessage({ action: 'bg_encrypt', text: plainText }, (res) => {
+          if (api.runtime.lastError) {
+            const msg = api.runtime.lastError.message || '';
+            if (msg.includes('Extension context invalidated')) {
+              return reject(new Error('EXTENSION_INVALIDATED'));
+            }
+            return reject(new Error(msg));
+          }
+          if (!res || !res.success) return reject(new Error(res ? res.error : 'Encryption failed in background'));
+          resolve(res.payload);
+        });
+      } catch (err) {
+        if (err.message && err.message.includes('Extension context invalidated')) {
+          reject(new Error('EXTENSION_INVALIDATED'));
+        } else {
+          reject(err);
+        }
+      }
+    });
   }
 
   // ─── Iframe Resize Listener ────────────────────────────────────────────────
@@ -181,7 +133,13 @@
     const checkLastActiveElement = !!(lastActiveElement && isTextInput(lastActiveElement));
 
     if (request.action === 'SOSK-MINI') {
-      handleKeyboardMini();
+      handleKeyboardMini(false);
+      sendResponse({ success: true });
+      return true;
+    }
+
+    if (request.action === 'SOSK-SHOW') {
+      handleKeyboardMini(true);
       sendResponse({ success: true });
       return true;
     }
@@ -589,9 +547,12 @@
   // The handle bar lives in the HOST page DOM → mouse events work correctly.
 
   /**
-   * Toggles the floating keyboard.
+   * Toggles or explicitly shows the floating keyboard.
+   * @param {boolean} forceShow - If true, ensures the keyboard is visible instead of toggling.
    */
-  function handleKeyboardMini() {
+  function handleKeyboardMini(forceShow = false) {
+    if (window !== window.top) return; // Prevent iframes from spawning their own keyboards
+
     try {
       api.storage.sync.get(['keyboardPosition'], (result) => {
         if (chrome.runtime.lastError) {
@@ -622,11 +583,17 @@
               }
             });
           } else {
-            toggleWrapperDisplay(keyboardWrapper);
-            api.runtime.sendMessage(
-              { action: 'keyboardStatus', status: keyboardWrapper.style.display === 'none' ? 'off' : 'on' },
-              () => { if (chrome.runtime.lastError) { console.debug('Keyboard status notify error:', chrome.runtime.lastError.message); } }
-            );
+            if (forceShow) {
+              keyboardWrapper.style.display = 'flex';
+              keyboardWrapper.setAttribute('aria-hidden', 'false');
+              api.runtime.sendMessage({ action: 'keyboardStatus', status: 'on' }, () => {});
+            } else {
+              toggleWrapperDisplay(keyboardWrapper);
+              api.runtime.sendMessage(
+                { action: 'keyboardStatus', status: keyboardWrapper.style.display === 'none' ? 'off' : 'on' },
+                () => { if (chrome.runtime.lastError) { console.debug('Keyboard status notify error:', chrome.runtime.lastError.message); } }
+              );
+            }
           }
         }
       });
