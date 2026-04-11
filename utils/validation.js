@@ -50,6 +50,9 @@ const VALID_ACTIONS = [
   'setKeyboardStatus',
   'contentScriptReady',
   'ping',
+  'bg_encrypt',
+  'bg_decrypt',
+  'SOSK-SHOW',
 ];
 
 /**
