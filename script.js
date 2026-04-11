@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Use browserAPI for cross-browser compatibility
+  // browserAPI cross-browser
   const api = window.browserAPI || chrome;
 
   document.body.innerHTML = `
@@ -167,21 +167,15 @@ document.addEventListener("DOMContentLoaded", function () {
     if (_resizeTimer) clearTimeout(_resizeTimer);
     _resizeTimer = setTimeout(() => {
       try {
-        // body has `width: max-content; height: max-content` in styles.css
-        // so scrollWidth/scrollHeight = the TRUE intrinsic content dimensions,
-        // not constrained by the current iframe viewport.
         const w = document.body.scrollWidth;
         const h = document.body.scrollHeight;
-
-        // Only send if size actually changed – prevents resize feedback loops
+        
         if (w === _lastReportedW && h === _lastReportedH) return;
         _lastReportedW = w;
         _lastReportedH = h;
 
         window.parent.postMessage({ type: "sosk:resize", width: w, height: h }, "*");
-      } catch (e) {
-        // Ignore cross-origin / postMessage errors silently
-      }
+      } catch (e) {}
     }, 40);
   }
 
@@ -198,30 +192,26 @@ document.addEventListener("DOMContentLoaded", function () {
     const keyboard = document.getElementById("keyboard");
     const layoutSelect = document.getElementById("layout-select");
 
-    // Apply layout-specific class (e.g. full, english-keyboard) to container
     keyboard.className = layoutSelect.value;
     keyboard.innerHTML = "";
 
     layout[layoutName].forEach((row) => {
       const rowDiv = document.createElement("div");
-      rowDiv.className = "flex"; // Handled by CSS display: flex
+      rowDiv.className = "flex";
 
       row.forEach((key, index) => {
         const keyButton = document.createElement("button");
         keyButton.className = "key";
         keyButton.textContent = key;
 
-        // Add backspace icon
         if (key === "backspace" || key === "Backspace") {
           keyButton.innerHTML = '<i class="fa-solid fa-delete-left"></i>';
         }
 
-        // Special classes for scramble button
         if (key === "scr" || key === "Scr") {
           keyButton.className = "scr";
         }
 
-        // Add concat-keys class to the last 4 keys of a row, or the scr key
         if (index >= row.length - 4 || key === "scr" || key === "Scr") {
           keyButton.classList.add("concat-keys");
         }
@@ -390,13 +380,10 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     document.querySelectorAll(".key").forEach((key) => {
-      // Skip concat-keys for 'full' layout so they don't change on Shift
       if (currentLayout === 'full' && key.classList.contains('concat-keys')) {
         return;
       }
-
       const isLetter = key.dataset.key.length === 1 && /[a-zA-Zก-๙]/.test(key.dataset.key);
-
       if (isLetter) {
         key.textContent = shiftActive
           ? key.dataset.key.toUpperCase()
@@ -406,12 +393,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  /**
-   * Updates a key button's display and dataset when shift/capsLock is toggled.
-   * Unified function (was duplicated for capsLock and shift separately).
-   * @param {HTMLButtonElement} key
-   * @param {boolean} isActive - Whether shift or capsLock is active
-   */
   function updateKeyContent(key, isActive) {
     const currentChar = key.textContent.trim();
 
