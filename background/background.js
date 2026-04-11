@@ -19,6 +19,59 @@ chrome.storage.local.get(['keyboardStatus'], (data) => {
   }
 });
 
+// ─── Crypto Helpers (For HTTP pages where window.crypto.subtle is undefined) ──
+const SOSK_KEY_NAME = 'soskKey';
+
+function base64ToArrayBuffer(base64) {
+  const binaryString = atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes.buffer;
+}
+
+function arrayBufferToBase64(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
+function getSyncStorage(keys) {
+  return new Promise((resolve) => {
+    chrome.storage.sync.get(keys, resolve);
+  });
+}
+
+async function decryptTextBackground(payload) {
+  const data = await getSyncStorage([SOSK_KEY_NAME]);
+  const keyB64 = data && data[SOSK_KEY_NAME];
+  if (!keyB64) throw new Error('Missing encryption key in storage');
+  const keyData = base64ToArrayBuffer(keyB64);
+  const cryptoKey = await self.crypto.subtle.importKey('raw', keyData, { name: 'AES-GCM' }, false, ['decrypt']);
+  const iv = new Uint8Array(base64ToArrayBuffer(payload.iv));
+  const cipher = base64ToArrayBuffer(payload.data);
+  const plainBuffer = await self.crypto.subtle.decrypt({ name: 'AES-GCM', iv }, cryptoKey, cipher);
+  return new TextDecoder().decode(plainBuffer);
+}
+
+async function encryptTextBackground(plainText) {
+  const data = await getSyncStorage([SOSK_KEY_NAME]);
+  const keyB64 = data && data[SOSK_KEY_NAME];
+  if (!keyB64) throw new Error('Missing encryption key in storage');
+  const keyData = base64ToArrayBuffer(keyB64);
+  const cryptoKey = await self.crypto.subtle.importKey('raw', keyData, { name: 'AES-GCM' }, false, ['encrypt']);
+  const iv = self.crypto.getRandomValues(new Uint8Array(12));
+  const encoded = new TextEncoder().encode(plainText);
+  const cipherBuffer = await self.crypto.subtle.encrypt({ name: 'AES-GCM', iv }, cryptoKey, encoded);
+  return { iv: arrayBufferToBase64(iv.buffer), data: arrayBufferToBase64(cipherBuffer) };
+}
+
+
 // ─── Installation ──────────────────────────────────────────────────────────────
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -83,15 +136,30 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // ── contentScriptReady (from content script on page load) ──
     if (message.action === 'contentScriptReady') {
       console.log('Content script ready in tab:', sender.tab ? sender.tab.id : 'unknown');
-      // If keyboard was ON, tell the newly loaded content script to show keyboard
-      if (keyboardStatus === 'on' && sender.tab && sender.tab.id) {
-        chrome.tabs.sendMessage(sender.tab.id, { action: 'SOSK-MINI' }, () => {
+      // If keyboard was ON, tell the newly loaded content script to show keyboard.
+      // We only do this for the TOP frame (frameId === 0) to avoid toggling when iframes load asynchronously.
+      if (keyboardStatus === 'on' && sender.tab && sender.tab.id && sender.frameId === 0) {
+        chrome.tabs.sendMessage(sender.tab.id, { action: 'SOSK-SHOW' }, () => {
           if (chrome.runtime.lastError) {
             console.debug('Could not auto-show keyboard:', chrome.runtime.lastError.message);
           }
         });
       }
       sendResponse({ ok: true });
+      return true;
+    }
+    // ── crypto operations (delegated from content script) ──
+    if (message.action === 'bg_encrypt') {
+      encryptTextBackground(message.text)
+        .then(payload => sendResponse({ success: true, payload }))
+        .catch(err => sendResponse({ success: false, error: err.message }));
+      return true;
+    }
+
+    if (message.action === 'bg_decrypt') {
+      decryptTextBackground(message.payload)
+        .then(plainText => sendResponse({ success: true, plainText }))
+        .catch(err => sendResponse({ success: false, error: err.message }));
       return true;
     }
 
