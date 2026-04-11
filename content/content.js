@@ -611,11 +611,23 @@
             }
           });
         } else {
-          toggleWrapperDisplay(keyboardWrapper);
-          api.runtime.sendMessage(
-            { action: 'keyboardStatus', status: keyboardWrapper.style.display === 'none' ? 'off' : 'on' },
-            () => { if (chrome.runtime.lastError) { console.debug('Keyboard status notify error:', chrome.runtime.lastError.message); } }
-          );
+          // Fix for Single Page Applications (SPAs) that might wipe the DOM element
+          if (!document.body.contains(keyboardWrapper)) {
+            document.body.appendChild(keyboardWrapper);
+            keyboardWrapper.style.display = 'flex';
+            keyboardWrapper.setAttribute('aria-hidden', 'false');
+            api.runtime.sendMessage({ action: 'keyboardStatus', status: 'on' }, () => {
+              if (chrome.runtime.lastError) {
+                console.debug('Could not notify background of keyboard ON:', chrome.runtime.lastError.message);
+              }
+            });
+          } else {
+            toggleWrapperDisplay(keyboardWrapper);
+            api.runtime.sendMessage(
+              { action: 'keyboardStatus', status: keyboardWrapper.style.display === 'none' ? 'off' : 'on' },
+              () => { if (chrome.runtime.lastError) { console.debug('Keyboard status notify error:', chrome.runtime.lastError.message); } }
+            );
+          }
         }
       });
     } catch (err) {
