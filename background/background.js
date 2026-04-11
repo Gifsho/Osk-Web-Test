@@ -12,6 +12,13 @@ importScripts('../utils/validation.js');
 /** @type {'on'|'off'} Current virtual keyboard status */
 let keyboardStatus = 'off';
 
+// Load initial status from storage to prevent reset when Service Worker wakes up
+chrome.storage.local.get(['keyboardStatus'], (data) => {
+  if (data && data.keyboardStatus) {
+    keyboardStatus = data.keyboardStatus;
+  }
+});
+
 // ─── Installation ──────────────────────────────────────────────────────────────
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -60,6 +67,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       (message.status === 'on' || message.status === 'off')
     ) {
       keyboardStatus = message.status;
+      chrome.storage.local.set({ keyboardStatus });
       broadcastStatusUpdate(keyboardStatus);
       sendResponse({ success: true, status: keyboardStatus });
       return true;
