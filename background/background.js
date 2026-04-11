@@ -148,7 +148,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ ok: true });
       return true;
     }
-
     // ── crypto operations (delegated from content script) ──
     if (message.action === 'bg_encrypt') {
       encryptTextBackground(message.text)

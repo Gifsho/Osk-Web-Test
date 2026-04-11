@@ -15,7 +15,6 @@
    * @type {HTMLDivElement|null}
    */
   let keyboardWrapper = null;
-
   /** @type {number|null} Focus restoration timeout handle */
   let focusTimeout = null;
   /** @type {Element|null} Last focused text input element */
@@ -191,10 +190,10 @@
       if (data.source !== 'SOSK_PAGE') return;
 
       const handleCryptoErr = (err, reqId) => {
-         if (err.message === 'EXTENSION_INVALIDATED') {
-           alert("⚠️ ตัวส่วนขยาย SOSK ของคุณได้รับการอัปเดต หรือรีโหลด \nกรุณากด F5 (Refresh) หน้านี้ก่อนใช้งานต่อครับ");
-         }
-         window.postMessage({ source: 'SOSK_CONTENT', ok: false, requestId: reqId, error: String(err) }, '*');
+        if (err.message === 'EXTENSION_INVALIDATED') {
+          alert("⚠️ ตัวส่วนขยาย SOSK ของคุณได้รับการอัปเดต หรือรีโหลด \nกรุณากด F5 (Refresh) หน้านี้ก่อนใช้งานต่อครับ");
+        }
+        window.postMessage({ source: 'SOSK_CONTENT', ok: false, requestId: reqId, error: String(err) }, '*');
       };
 
       if (data.action === 'encrypt' && typeof data.text === 'string') {
@@ -259,11 +258,11 @@
           decryptText(actionData.key.enc)
             .then((plain) => insertText(lastActiveElement, plain))
             .catch((err) => {
-               if (err.message === 'EXTENSION_INVALIDATED') {
-                 alert("⚠️ ตัวส่วนขยาย SOSK ของคุณได้รับการอัปเดต หรือรีโหลด \nกรุณากด F5 (Refresh) หน้านี้ก่อนใช้งานต่อครับ");
-               } else {
-                 console.warn('SOSK: Decryption failed:', err);
-               }
+              if (err.message === 'EXTENSION_INVALIDATED') {
+                alert("⚠️ ตัวส่วนขยาย SOSK ของคุณได้รับการอัปเดต หรือรีโหลด \nกรุณากด F5 (Refresh) หน้านี้ก่อนใช้งานต่อครับ");
+              } else {
+                console.warn('SOSK: Decryption failed:', err);
+              }
             });
         } else if (typeof actionData.key === 'string') {
           insertText(lastActiveElement, actionData.key);
@@ -365,7 +364,7 @@
         }
         element.focus({ preventScroll: true });
         if (_start !== null && _end !== null) {
-          try { element.setSelectionRange(_start, _end); } catch (_) {}
+          try { element.setSelectionRange(_start, _end); } catch (_) { }
         }
       }
       return true;
@@ -387,7 +386,7 @@
           const start = typeof element.selectionStart === 'number' ? element.selectionStart : (element.value ? element.value.length : 0);
           const end = typeof element.selectionEnd === 'number' ? element.selectionEnd : start;
           const value = element.value || '';
-          
+
           if (start !== end) {
             // Delete the highlighted selection
             element.value = value.slice(0, start) + value.slice(end);
@@ -399,7 +398,7 @@
             element.setSelectionRange(start - 1, start - 1);
             element.dispatchEvent(new Event('input', { bubbles: true }));
           }
-        } catch (_) {}
+        } catch (_) { }
       }, 20);
     } else if (element && element.isContentEditable) {
       if (!ensureElementFocus(element)) return;
@@ -419,7 +418,7 @@
           const start = typeof element.selectionStart === 'number' ? element.selectionStart : (element.value ? element.value.length : 0);
           const end = typeof element.selectionEnd === 'number' ? element.selectionEnd : start;
           const value = element.value || '';
-          
+
           if (start !== end) {
             // Delete selection
             element.value = value.slice(0, start) + value.slice(end);
@@ -431,7 +430,7 @@
             element.setSelectionRange(start, start);
             element.dispatchEvent(new Event('input', { bubbles: true }));
           }
-        } catch (_) {}
+        } catch (_) { }
       }, 20);
     } else if (element && element.isContentEditable) {
       if (!ensureElementFocus(element)) return;
@@ -586,7 +585,7 @@
             if (forceShow) {
               keyboardWrapper.style.display = 'flex';
               keyboardWrapper.setAttribute('aria-hidden', 'false');
-              api.runtime.sendMessage({ action: 'keyboardStatus', status: 'on' }, () => {});
+              api.runtime.sendMessage({ action: 'keyboardStatus', status: 'on' }, () => { });
             } else {
               toggleWrapperDisplay(keyboardWrapper);
               api.runtime.sendMessage(
@@ -669,7 +668,7 @@
     closeBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       toggleWrapperDisplay(wrapper);
-      api.runtime.sendMessage({ action: 'keyboardStatus', status: 'off' }, () => {});
+      api.runtime.sendMessage({ action: 'keyboardStatus', status: 'off' }, () => { });
     });
     handle.appendChild(closeBtn);
 
